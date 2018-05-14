@@ -5,7 +5,7 @@
 
 下面列举其扩展功能的使用：
 
-1. RDBMS  to  Elasticsearch
+1. RDBMS  to  Elasticsearch </br>
   在其安装目录下执行 ：  bin/sqoop import --connect jdbc:oracle:thin:@192.168.1.35:1521:orcl --username system --password dkss --table DK10 -m 1 --target-dir 192.168.1.99:9200@dkes@dksqoop2/oracle  
   执行命令说明：
     sqoop import  #固定，默认
