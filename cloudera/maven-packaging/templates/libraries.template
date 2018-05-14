@@ -1,0 +1,57 @@
+#   Licensed to Cloudera, Inc. under one or more
+#   contributor license agreements.  See the NOTICE file distributed with
+#   this work for additional information regarding copyright ownership.
+#   Cloudera, Inc. licenses this file to You under the Apache License, Version 2.0
+#   (the "License"); you may not use this file except in compliance with
+#   the License.  You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+# This properties file lists the versions of the various artifacts we use.
+# It drives ivy and the generation of a maven POM
+
+# Default build profiles for CDH
+hadoopversion=200
+hbaseprofile=95
+
+#checkstyle.version=checkstyle:checkstyle.version
+checkstyle.version=5.0
+
+commons-cli.version=commons-cli:commons-cli.version
+commons-collections.version=commons-collections:commons-collections.version
+commons-io.version=commons-io:commons-io.version
+commons-lang.version=commons-lang:commons-lang.version
+commons-logging.version=commons-logging:commons-logging.version
+
+# Cloudera Distribution dependency version
+hadoop-core.cloudera.version=org.apache.hadoop:hadoop-core.version
+
+hbase95.version=org.apache.hbase:hbase-common.version
+
+hcatalog.version=org.apache.hive.hcatalog:hcatalog.version
+
+zookeeper.version=org.apache.zookeeper:zookeeper.version
+
+hsqldb.version=hsqldb:hsqldb.version
+
+ivy.version=org.apache.ivy:ivy.version
+
+junit.version=junit:junit.version
+
+log4j.version=log4j:log4j.version
+
+mvn.version=2.0.10
+
+rats-lib.version=com.google.code.p.arat:rat-lib.version
+
+snappy.version=1.0.3.2
+
+avro.version=org.apache.avro:avro.version
+
+kite-data.version=org.kitesdk:kite-data-core.version

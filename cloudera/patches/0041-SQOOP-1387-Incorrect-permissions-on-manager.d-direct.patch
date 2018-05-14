@@ -1,0 +1,38 @@
+From 79f8c1a7e767b6bd582e7a63fae1616cad542f58 Mon Sep 17 00:00:00 2001
+From: Chiwan Park <chiwanpark@icloud.com>
+Date: Tue, 16 Sep 2014 16:17:29 -0700
+Subject: [PATCH 041/101] SQOOP-1387: Incorrect permissions on manager.d directory can lead to NPE
+
+---
+ src/java/org/apache/sqoop/ConnFactory.java |   15 ++++++++++++++-
+ 1 files changed, 14 insertions(+), 1 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/ConnFactory.java b/src/java/org/apache/sqoop/ConnFactory.java
+index e9c45bc..335b037 100644
+--- a/src/java/org/apache/sqoop/ConnFactory.java
++++ b/src/java/org/apache/sqoop/ConnFactory.java
+@@ -294,7 +294,20 @@ private Configuration loadManagersFromConfDir(Configuration conf) {
+     if (mgrDir.exists() && mgrDir.isDirectory()) {
+       // We have a managers.d subdirectory. Get the file list, sort it,
+       // and process them in order.
+-      String [] fileNames = mgrDir.list();
++      String[] fileNames;
++
++      try {
++        fileNames = mgrDir.list();
++      } catch (SecurityException e) {
++        fileNames = null;
++      }
++
++      if (null == fileNames) {
++        LOG.warn("Sqoop cannot read $SQOOP_CONF_DIR/managers.d. "
++            + "Please check the permissions on managers.d.");
++        return conf;
++      }
++
+       Arrays.sort(fileNames);
+ 
+       for (String fileName : fileNames) {
+-- 
+1.7.0.4
+

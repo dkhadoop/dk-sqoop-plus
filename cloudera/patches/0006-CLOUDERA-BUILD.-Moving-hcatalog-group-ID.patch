@@ -1,0 +1,55 @@
+From a24d0a01e11a8c85d7ba0d69d940a92e15b78a50 Mon Sep 17 00:00:00 2001
+From: Jenkins slave <kitchen-build@cloudera.com>
+Date: Sun, 10 Nov 2013 09:27:13 -0800
+Subject: [PATCH 006/101] CLOUDERA-BUILD. Moving hcatalog group ID.
+
+Conflicts:
+	ivy.xml
+---
+ cloudera/maven-packaging/sqoop/pom.xml             |    2 +-
+ cloudera/maven-packaging/templates/build.template  |    2 +-
+ .../maven-packaging/templates/libraries.template   |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cloudera/maven-packaging/sqoop/pom.xml b/cloudera/maven-packaging/sqoop/pom.xml
+index dbc4677..aa0b764 100644
+--- a/cloudera/maven-packaging/sqoop/pom.xml
++++ b/cloudera/maven-packaging/sqoop/pom.xml
+@@ -83,7 +83,7 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.apache.hcatalog</groupId>
++      <groupId>org.apache.hive.hcatalog</groupId>
+       <artifactId>hcatalog-core</artifactId>
+     </dependency>
+ 
+diff --git a/cloudera/maven-packaging/templates/build.template b/cloudera/maven-packaging/templates/build.template
+index ae33ac3..2276b88 100644
+--- a/cloudera/maven-packaging/templates/build.template
++++ b/cloudera/maven-packaging/templates/build.template
+@@ -6,7 +6,7 @@ hadoop.version=org.apache.hadoop:hadoop-main.version
+ 
+ hbase95.version=org.apache.hbase:hbase-common.version
+ 
+-hcatalog.version=org.apache.hcatalog:hcatalog-core.version
++hcatalog.version=org.apache.hive.hcatalog:hcatalog-core.version
+ 
+ zookeeper.version=org.apache.zookeeper:zookeeper.version
+ 
+diff --git a/cloudera/maven-packaging/templates/libraries.template b/cloudera/maven-packaging/templates/libraries.template
+index 766a10d..657fcc0 100644
+--- a/cloudera/maven-packaging/templates/libraries.template
++++ b/cloudera/maven-packaging/templates/libraries.template
+@@ -34,7 +34,7 @@ hadoop-core.cloudera.version=org.apache.hadoop:hadoop-core.version
+ 
+ hbase95.version=org.apache.hbase:hbase-common.version
+ 
+-hcatalog.version=org.apache.hcatalog:hcatalog.version
++hcatalog.version=org.apache.hive.hcatalog:hcatalog.version
+ 
+ zookeeper.version=org.apache.zookeeper:zookeeper.version
+ 
+-- 
+1.7.0.4
+

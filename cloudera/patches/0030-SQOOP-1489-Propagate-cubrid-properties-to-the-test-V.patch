@@ -1,0 +1,33 @@
+From b400240847e55ad1892014376371bd9ebe602450 Mon Sep 17 00:00:00 2001
+From: Venkat Ranganathan <venkat@hortonworks.com>
+Date: Mon, 1 Sep 2014 12:08:31 -0700
+Subject: [PATCH 030/101] SQOOP-1489: Propagate cubrid properties to the test VM
+   (Jarek Jarcec Cecho via Venkat Ranganathan)
+
+---
+ build.xml |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index 4b4b26d..e8e1de9 100644
+--- a/build.xml
++++ b/build.xml
+@@ -1004,6 +1004,15 @@
+       <sysproperty key="sqoop.test.cubrid.connectstring.host_url"
+                    value="${sqoop.test.cubrid.connectstring.host_url}"/>
+ 
++      <sysproperty key="sqoop.test.cubrid.connectstring.database"
++                   value="${sqoop.test.cubrid.connectstring.database}"/>
++
++      <sysproperty key="sqoop.test.cubrid.connectstring.username"
++                   value="${sqoop.test.cubrid.connectstring.username}"/>
++
++      <sysproperty key="sqoop.test.cubrid.connectstring.password"
++                   value="${sqoop.test.cubrid.connectstring.password}"/>
++
+       <sysproperty key="sqoop.test.postgresql.connectstring.host_url"
+                    value="${sqoop.test.postgresql.connectstring.host_url}"/>
+ 
+-- 
+1.7.0.4
+

@@ -1,0 +1,264 @@
+From 7b79fca7a4f5aefc092b0b7cf74501f57aeea5fd Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abe@apache.org>
+Date: Wed, 4 Mar 2015 16:33:08 -0800
+Subject: [PATCH 087/101] SQOOP-2170: MySQL specific tests are not properly cleaning up created tables
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ src/test/com/cloudera/sqoop/TestAllTables.java     |   13 ++++
+ .../sqoop/manager/DirectMySQLExportTest.java       |   17 ++---
+ .../cloudera/sqoop/manager/DirectMySQLTest.java    |   61 +++++++++-----------
+ .../sqoop/manager/JdbcMySQLExportTest.java         |   19 +++---
+ .../sqoop/manager/mysql/MySqlCallExportTest.java   |   12 ++++
+ 5 files changed, 68 insertions(+), 54 deletions(-)
+
+diff --git a/src/test/com/cloudera/sqoop/TestAllTables.java b/src/test/com/cloudera/sqoop/TestAllTables.java
+index d2c7b16..39e8941 100644
+--- a/src/test/com/cloudera/sqoop/TestAllTables.java
++++ b/src/test/com/cloudera/sqoop/TestAllTables.java
+@@ -29,6 +29,7 @@
+ import org.apache.hadoop.fs.Path;
+ import org.apache.hadoop.io.IOUtils;
+ import org.junit.Before;
++import org.junit.After;
+ 
+ import com.cloudera.sqoop.testutil.CommonArgs;
+ import com.cloudera.sqoop.testutil.ImportJobTestCase;
+@@ -110,6 +111,18 @@ public void setUp() {
+     }
+   }
+ 
++  @After
++  public void tearDown() {
++    try {
++      for (String table : tableNames) {
++        dropTableIfExists(table);
++      }
++    } catch(SQLException e) {
++      LOG.error("Can't clean up the database:", e);
++    }
++    super.tearDown();
++  }
++
+   public void testMultiTableImport() throws IOException {
+     String [] argv = getArgv(true, null);
+     runImport(new ImportAllTablesTool(), argv);
+diff --git a/src/test/com/cloudera/sqoop/manager/DirectMySQLExportTest.java b/src/test/com/cloudera/sqoop/manager/DirectMySQLExportTest.java
+index eac7836..986dc86 100644
+--- a/src/test/com/cloudera/sqoop/manager/DirectMySQLExportTest.java
++++ b/src/test/com/cloudera/sqoop/manager/DirectMySQLExportTest.java
+@@ -98,6 +98,13 @@ public void setUp() {
+ 
+   @After
+   public void tearDown() {
++    try {
++      Statement stmt = conn.createStatement();
++      stmt.execute(getDropTableStatement(getTableName()));
++    } catch(SQLException e) {
++      LOG.error("Can't clean up the database:", e);
++    }
++
+     super.tearDown();
+ 
+     if (null != this.conn) {
+@@ -107,16 +114,6 @@ public void tearDown() {
+         LOG.error("Got SQLException closing conn: " + sqlE.toString());
+       }
+     }
+-
+-    if (null != manager) {
+-      try {
+-        manager.close();
+-        manager = null;
+-      } catch (SQLException sqlE) {
+-        LOG.error("Got SQLException: " + sqlE.toString());
+-        fail("Got SQLException: " + sqlE.toString());
+-      }
+-    }
+   }
+ 
+   @Override
+diff --git a/src/test/com/cloudera/sqoop/manager/DirectMySQLTest.java b/src/test/com/cloudera/sqoop/manager/DirectMySQLTest.java
+index b7d6284..d0f0c50 100644
+--- a/src/test/com/cloudera/sqoop/manager/DirectMySQLTest.java
++++ b/src/test/com/cloudera/sqoop/manager/DirectMySQLTest.java
+@@ -119,34 +119,19 @@ public void setUp() {
+       LOG.error("Encountered SQL Exception: " + sqlE);
+       sqlE.printStackTrace();
+       fail("SQLException when running test setUp(): " + sqlE);
+-    } finally {
+-      try {
+-        if (null != st) {
+-          st.close();
+-        }
+-
+-        if (null != connection) {
+-          connection.close();
+-        }
+-      } catch (SQLException sqlE) {
+-        LOG.warn("Got SQLException when closing connection: " + sqlE);
+-      }
+     }
+   }
+ 
+   @After
+   public void tearDown() {
+-    super.tearDown();
+-
+-    if (null != manager) {
+-      try {
+-        manager.close();
+-        manager = null;
+-      } catch (SQLException sqlE) {
+-        LOG.error("Got SQLException: " + sqlE.toString());
+-        fail("Got SQLException: " + sqlE.toString());
+-      }
++    try {
++      Statement stmt = manager.getConnection().createStatement();
++      stmt.execute("DROP TABLE " + getTableName());
++    } catch(SQLException e) {
++      LOG.error("Can't clean up the database:", e);
+     }
++
++    super.tearDown();
+   }
+ 
+   private String [] getArgv(boolean mysqlOutputDelims, boolean isDirect,
+@@ -342,7 +327,17 @@ public void testJdbcEscapedTableName() throws Exception {
+ 
+       st.executeUpdate("INSERT INTO `" + RESERVED_TABLE_NAME + "` VALUES("
+           + "2,'Aaron','2009-05-14',1000000.00,'engineering')");
++      st.close();
+       connection.commit();
++
++      String [] expectedResults = {
++          "2,Aaron,2009-05-14,1000000.0,engineering",
++      };
++
++      doImport(false, false, RESERVED_TABLE_NAME, expectedResults, null);
++
++      st = connection.createStatement();
++      st.execute("DROP TABLE `" + RESERVED_TABLE_NAME + "`");
+     } finally {
+       if (null != st) {
+         st.close();
+@@ -353,11 +348,6 @@ public void testJdbcEscapedTableName() throws Exception {
+       }
+     }
+ 
+-    String [] expectedResults = {
+-        "2,Aaron,2009-05-14,1000000.0,engineering",
+-    };
+-
+-    doImport(false, false, RESERVED_TABLE_NAME, expectedResults, null);
+   }
+ 
+   @Test
+@@ -365,7 +355,6 @@ public void testJdbcEscapedColumnName() throws Exception {
+     // Test a JDBC-based import of a table with a column whose name is
+     // a reserved sql keyword (and is thus `quoted`).
+     final String TABLE_NAME = "mysql_escaped_col_table";
+-    setCurTableName(TABLE_NAME);
+     SqoopOptions options = new SqoopOptions(MySQLTestUtils.CONNECT_STRING,
+         TABLE_NAME);
+     options.setUsername(MySQLTestUtils.getCurrentUser());
+@@ -390,7 +379,17 @@ public void testJdbcEscapedColumnName() throws Exception {
+ 
+       st.executeUpdate("INSERT INTO " + TABLE_NAME + " VALUES("
+           + "2,'Aaron','2009-05-14',1000000.00,'engineering')");
++      st.close();
+       connection.commit();
++
++      String [] expectedResults = {
++          "2,Aaron,2009-05-14,1000000.0,engineering",
++      };
++
++      doImport(false, false, TABLE_NAME, expectedResults, null);
++
++      st = connection.createStatement();
++      st.execute("DROP TABLE " + TABLE_NAME);
+     } finally {
+       if (null != st) {
+         st.close();
+@@ -400,11 +399,5 @@ public void testJdbcEscapedColumnName() throws Exception {
+         connection.close();
+       }
+     }
+-
+-    String [] expectedResults = {
+-        "2,Aaron,2009-05-14,1000000.0,engineering",
+-    };
+-
+-    doImport(false, false, TABLE_NAME, expectedResults, null);
+   }
+ }
+diff --git a/src/test/com/cloudera/sqoop/manager/JdbcMySQLExportTest.java b/src/test/com/cloudera/sqoop/manager/JdbcMySQLExportTest.java
+index f7cc297..86b9aab 100644
+--- a/src/test/com/cloudera/sqoop/manager/JdbcMySQLExportTest.java
++++ b/src/test/com/cloudera/sqoop/manager/JdbcMySQLExportTest.java
+@@ -21,6 +21,7 @@
+ import java.io.IOException;
+ import java.sql.Connection;
+ import java.sql.SQLException;
++import java.sql.Statement;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+@@ -97,6 +98,14 @@ public void setUp() {
+ 
+   @After
+   public void tearDown() {
++    try {
++      Statement stmt = conn.createStatement();
++      stmt.execute(getDropTableStatement(getTableName()));
++      stmt.execute(getDropTableStatement(getStagingTableName()));
++    } catch(SQLException e) {
++      LOG.error("Can't clean up the database:", e);
++    }
++
+     super.tearDown();
+ 
+     if (null != this.conn) {
+@@ -106,16 +115,6 @@ public void tearDown() {
+         LOG.error("Got SQLException closing conn: " + sqlE.toString());
+       }
+     }
+-
+-    if (null != manager) {
+-      try {
+-        manager.close();
+-        manager = null;
+-      } catch (SQLException sqlE) {
+-        LOG.error("Got SQLException: " + sqlE.toString());
+-        fail("Got SQLException: " + sqlE.toString());
+-      }
+-    }
+   }
+ 
+   @Override
+diff --git a/src/test/org/apache/sqoop/manager/mysql/MySqlCallExportTest.java b/src/test/org/apache/sqoop/manager/mysql/MySqlCallExportTest.java
+index 3be447e..6bf939b 100644
+--- a/src/test/org/apache/sqoop/manager/mysql/MySqlCallExportTest.java
++++ b/src/test/org/apache/sqoop/manager/mysql/MySqlCallExportTest.java
+@@ -56,6 +56,18 @@ public void setUp() {
+     createObjects();
+   }
+ 
++  @Override
++  public void tearDown() {
++    try {
++      Statement stmt = getManager().getConnection().createStatement();
++      stmt.execute("DROP TABLE " + getTableName());
++    } catch(SQLException e) {
++      LOG.error("Can't clean up the database:", e);
++    }
++
++    super.tearDown();
++  }
++
+   private String[] getArgv(String... extraArgs) {
+     ArrayList<String> args = new ArrayList<String>();
+ 
+-- 
+1.7.0.4
+

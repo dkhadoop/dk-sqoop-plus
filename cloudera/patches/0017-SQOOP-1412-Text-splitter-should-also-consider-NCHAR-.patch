@@ -1,0 +1,27 @@
+From f56271171ea3eef2e9118cd633036bccf297860c Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Sun, 3 Aug 2014 12:49:48 -0700
+Subject: [PATCH 017/101] SQOOP-1412: Text splitter should also consider NCHAR and NVARCHAR fields
+
+(Venkat Ranganathan via Jarek Jarcec Cecho)
+---
+ .../mapreduce/db/DataDrivenDBInputFormat.java      |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java b/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java
+index 02f3d62..6b30820 100644
+--- a/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java
++++ b/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java
+@@ -98,7 +98,9 @@ protected DBSplitter getSplitter(int sqlDataType) {
+       return new FloatSplitter();
+ 
+     case Types.CHAR:
++    case Types.NCHAR:
+     case Types.VARCHAR:
++    case Types.NVARCHAR:
+     case Types.LONGVARCHAR:
+       return new TextSplitter();
+ 
+-- 
+1.7.0.4
+

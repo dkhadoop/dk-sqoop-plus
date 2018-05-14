@@ -1,0 +1,29 @@
+From d99fa81d436e33becdd6a67398731443821209e5 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Sun, 18 Aug 2013 13:04:36 -0700
+Subject: [PATCH 003/101] CLOUDERA-BUILD. Switching to target JDK 1.7
+
+Conflicts:
+	build.xml
+---
+ build.xml |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index 78c1cad..292d2b0 100644
+--- a/build.xml
++++ b/build.xml
+@@ -295,8 +295,8 @@
+   <property name="src.tar.file" location="${build.dir}/${src.artifact.name}.tar.gz" />
+ 
+   <!-- compilation -->
+-  <property name="targetJavaVersion" value="1.6" />
+-  <property name="sourceJavaVersion" value="1.6" />
++  <property name="targetJavaVersion" value="1.7" />
++  <property name="sourceJavaVersion" value="1.7" />
+   <property name="javac.deprecation" value="off"/>
+   <property name="javac.debug" value="on"/>
+   <property name="build.encoding" value="ISO-8859-1"/>
+-- 
+1.7.0.4
+

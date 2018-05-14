@@ -1,0 +1,22 @@
+version=org.apache.sqoop:sqoop.version
+sqoop.version=org.apache.sqoop:sqoop.version
+reactor.repo=https://repository.cloudera.com/content/repositories/snapshots
+hadoop-core.cloudera.version=org.apache.hadoop:hadoop-core.version
+hadoop.version=org.apache.hadoop:hadoop-main.version
+
+hbase95.version=org.apache.hbase:hbase-common.version
+
+hcatalog.version=org.apache.hive:hive-common.version
+
+zookeeper.version=org.apache.zookeeper:zookeeper.version
+
+avro.version=org.apache.avro:avro.version
+
+kite-data.version=org.kitesdk:kite-data-core.version
+
+# Default build profiles for CDH
+hadoopversion=200
+hbaseprofile=95
+
+# CDH5 is no longer compatible with accumulo 1.5's test mini cluster
+accumulo.version=1.6.2

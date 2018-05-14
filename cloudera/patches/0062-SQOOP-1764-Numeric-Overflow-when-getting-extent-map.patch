@@ -1,0 +1,175 @@
+From 3961095c5a95326105f3005ea8948d8b25ef1a51 Mon Sep 17 00:00:00 2001
+From: Venkat Ranganathan <venkat@hortonworks.com>
+Date: Tue, 18 Nov 2014 20:20:29 -0800
+Subject: [PATCH 062/101] SQOOP-1764: Numeric Overflow when getting extent map
+ (David Robson via Venkat Ranganathan)
+
+---
+ .../manager/oracle/OraOopOracleDataChunk.java      |    2 +-
+ .../oracle/OraOopOracleDataChunkExtent.java        |   22 ++++++++++----------
+ .../oracle/OraOopOracleDataChunkPartition.java     |   10 ++++----
+ .../sqoop/manager/oracle/OraOopOracleQueries.java  |    6 ++--
+ .../manager/oracle/OraOopOracleQueriesTest.java    |    8 +++++++
+ 5 files changed, 28 insertions(+), 20 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunk.java b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunk.java
+index bc94abd..eb67fd2 100644
+--- a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunk.java
++++ b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunk.java
+@@ -29,7 +29,7 @@
+ 
+   private String id;
+ 
+-  public abstract int getNumberOfBlocks();
++  public abstract long getNumberOfBlocks();
+ 
+   public String getWhereClause() {
+     return "1=1";
+diff --git a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkExtent.java b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkExtent.java
+index 5262d0e..20b39ee 100644
+--- a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkExtent.java
++++ b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkExtent.java
+@@ -30,15 +30,16 @@
+ 
+   private int oracleDataObjectId;
+   private int relativeDatafileNumber;
+-  private int startBlockNumber;
+-  private int finishBlockNumber;
++  private long startBlockNumber;
++  private long finishBlockNumber;
+ 
+   OraOopOracleDataChunkExtent() {
+ 
+   }
+ 
+   OraOopOracleDataChunkExtent(String id, int oracleDataObjectId,
+-      int relativeDatafileNumber, int startBlockNumber, int finishBlockNumber) {
++      int relativeDatafileNumber, long startBlockNumber,
++      long finishBlockNumber) {
+ 
+     this.setId(id);
+     this.oracleDataObjectId = oracleDataObjectId;
+@@ -67,8 +68,8 @@ public void write(DataOutput output) throws IOException {
+     Text.writeString(output, this.getId());
+     output.writeInt(this.oracleDataObjectId);
+     output.writeInt(this.relativeDatafileNumber);
+-    output.writeInt(this.startBlockNumber);
+-    output.writeInt(this.finishBlockNumber);
++    output.writeLong(this.startBlockNumber);
++    output.writeLong(this.finishBlockNumber);
+   }
+ 
+   @Override
+@@ -76,17 +77,16 @@ public void readFields(DataInput input) throws IOException {
+     this.setId(Text.readString(input));
+     this.oracleDataObjectId = input.readInt();
+     this.relativeDatafileNumber = input.readInt();
+-    this.startBlockNumber = input.readInt();
+-    this.finishBlockNumber = input.readInt();
++    this.startBlockNumber = input.readLong();
++    this.finishBlockNumber = input.readLong();
+   }
+ 
+   @Override
+-  public int getNumberOfBlocks() {
+-
+-    if (this.finishBlockNumber == 0 && this.startBlockNumber == 0) {
++  public long getNumberOfBlocks() {
++    if (this.finishBlockNumber == 0L && this.startBlockNumber == 0L) {
+       return 0;
+     } else {
+-      return (this.finishBlockNumber - this.startBlockNumber) + 1;
++      return (this.finishBlockNumber - this.startBlockNumber) + 1L;
+     }
+   }
+ 
+diff --git a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkPartition.java b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkPartition.java
+index fbd8a16..59889b8 100644
+--- a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkPartition.java
++++ b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleDataChunkPartition.java
+@@ -30,21 +30,21 @@
+ public class OraOopOracleDataChunkPartition extends OraOopOracleDataChunk {
+ 
+   private boolean isSubPartition;
+-  private int blocks;
++  private long blocks;
+ 
+   OraOopOracleDataChunkPartition() {
+ 
+   }
+ 
+   OraOopOracleDataChunkPartition(String partitionName, boolean isSubPartition,
+-      int blocks) {
++      long blocks) {
+     this.setId(partitionName);
+     this.isSubPartition = isSubPartition;
+     this.blocks = blocks;
+   }
+ 
+   @Override
+-  public int getNumberOfBlocks() {
++  public long getNumberOfBlocks() {
+     return this.blocks;
+   }
+ 
+@@ -52,14 +52,14 @@ public int getNumberOfBlocks() {
+   public void write(DataOutput output) throws IOException {
+     Text.writeString(output, this.getId());
+     output.writeBoolean(this.isSubPartition);
+-    output.writeInt(this.blocks);
++    output.writeLong(this.blocks);
+   }
+ 
+   @Override
+   public void readFields(DataInput input) throws IOException {
+     this.setId(Text.readString(input));
+     this.isSubPartition = input.readBoolean();
+-    this.blocks = input.readInt();
++    this.blocks = input.readLong();
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleQueries.java b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleQueries.java
+index b65d009..ea64c6d 100644
+--- a/src/java/org/apache/sqoop/manager/oracle/OraOopOracleQueries.java
++++ b/src/java/org/apache/sqoop/manager/oracle/OraOopOracleQueries.java
+@@ -324,7 +324,7 @@ private static void bindPartitionBindVars(PreparedStatement statement,
+       OraOopOracleDataChunkPartition dataChunk =
+           new OraOopOracleDataChunkPartition(resultSet
+               .getString("partition_name"), resultSet
+-              .getBoolean("is_subpartition"), resultSet.getInt("blocks"));
++              .getBoolean("is_subpartition"), resultSet.getLong("blocks"));
+       result.add(dataChunk);
+     }
+     resultSet.close();
+@@ -417,8 +417,8 @@ private static void bindPartitionBindVars(PreparedStatement statement,
+       OraOopOracleDataChunkExtent dataChunk =
+           new OraOopOracleDataChunkExtent(dataChunkId, resultSet
+               .getInt("data_object_id"), resultSet.getInt("relative_fno"),
+-              resultSet.getInt("start_block_id"), resultSet
+-                  .getInt("end_block_id"));
++              resultSet.getLong("start_block_id"), resultSet
++                  .getLong("end_block_id"));
+       result.add(dataChunk);
+     }
+ 
+diff --git a/src/test/org/apache/sqoop/manager/oracle/OraOopOracleQueriesTest.java b/src/test/org/apache/sqoop/manager/oracle/OraOopOracleQueriesTest.java
+index 09314da..abd3329 100644
+--- a/src/test/org/apache/sqoop/manager/oracle/OraOopOracleQueriesTest.java
++++ b/src/test/org/apache/sqoop/manager/oracle/OraOopOracleQueriesTest.java
+@@ -51,4 +51,12 @@ public void testGetCurrentSchema() throws Exception {
+     }
+   }
+ 
++  @Test
++  public void testLongBlockId() {
++    OraOopOracleDataChunkExtent chunk =
++        new OraOopOracleDataChunkExtent("1", 100, 1, 2147483648L, 4294967295L);
++    String whereClause = chunk.getWhereClause();
++    Assert.assertNotNull(whereClause);
++  }
++
+ }
+-- 
+1.7.0.4
+

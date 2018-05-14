@@ -1,0 +1,30 @@
+From adeea1b44e4b131307572a15ebaeeada1facd8d0 Mon Sep 17 00:00:00 2001
+From: Venkat Ranganathan <venkat@hortonworks.com>
+Date: Tue, 26 Aug 2014 17:06:49 -0700
+Subject: [PATCH 027/101] SQOOP-1474: Fix usage of StringUtils.repeat method
+
+---
+ .../org/apache/sqoop/TestExportUsingProcedure.java |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/test/org/apache/sqoop/TestExportUsingProcedure.java b/src/test/org/apache/sqoop/TestExportUsingProcedure.java
+index 78d688d..98ebf3c 100644
+--- a/src/test/org/apache/sqoop/TestExportUsingProcedure.java
++++ b/src/test/org/apache/sqoop/TestExportUsingProcedure.java
+@@ -241,8 +241,11 @@ private static void insertFunction(int id, String msg,
+       sql.append(instanceForProcedure.names[i]);
+     }
+     sql.append(") values (");
+-    sql.append(StringUtils.repeat("?", ",  ",
+-        instanceForProcedure.names.length + 2));
++    for (int i = 0; i < instanceForProcedure.names.length + 2; ++i) {
++      sql.append("?,");
++    }
++    // Remove last ,
++    sql = sql.delete(sql.length() - 1, sql.length());
+     sql.append(")");
+ 
+     PreparedStatement statement = con.prepareStatement(sql.toString());
+-- 
+1.7.0.4
+

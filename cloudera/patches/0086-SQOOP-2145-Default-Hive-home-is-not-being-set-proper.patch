@@ -1,0 +1,31 @@
+From c38a3d965f67ff27722bb20f72a51aed3bca493a Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Sat, 28 Feb 2015 08:39:31 -0800
+Subject: [PATCH 086/101] SQOOP-2145: Default Hive home is not being set properly under certain circumstances
+
+(Mark Grover via Jarek Jarcec Cecho)
+---
+ bin/configure-sqoop |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/bin/configure-sqoop b/bin/configure-sqoop
+index 5b87c5e..b51b416 100755
+--- a/bin/configure-sqoop
++++ b/bin/configure-sqoop
+@@ -110,6 +110,13 @@ if [ -z "${ZOOKEEPER_HOME}" ]; then
+     ZOOKEEPER_HOME=${SQOOP_HOME}/../zookeeper
+   fi
+ fi
++if [ -z "${HIVE_HOME}" ]; then
++  if [ -d "/usr/lib/hive" ]; then
++    export HIVE_HOME=/usr/lib/hive
++  elif [ -d ${SQOOP_HOME}/../hive ]; then
++    export HIVE_HOME=${SQOOP_HOME}/../hive
++  fi
++fi
+ 
+ # Check: If we can't find our dependencies, give up here.
+ if [ ! -d "${HADOOP_COMMON_HOME}" ]; then
+-- 
+1.7.0.4
+

@@ -1,0 +1,165 @@
+From 52c22ed3a106fee5dc531a9330b420eefb8ee20d Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 1 Sep 2014 10:52:15 +0200
+Subject: [PATCH 029/101] SQOOP-1392: Create the temporary directory inside task working dir rather then in tmp
+
+(Richard via Jarek Jarcec Cecho)
+---
+ .../com/cloudera/sqoop/lib/LargeObjectLoader.java  |    5 ++---
+ .../org/apache/sqoop/lib/LargeObjectLoader.java    |    5 ++---
+ .../apache/sqoop/mapreduce/AvroImportMapper.java   |    3 +--
+ .../sqoop/mapreduce/HBaseBulkImportMapper.java     |    5 +----
+ .../sqoop/mapreduce/ParquetImportMapper.java       |    4 +---
+ .../sqoop/mapreduce/SequenceFileImportMapper.java  |    3 +--
+ .../apache/sqoop/mapreduce/TextImportMapper.java   |    3 +--
+ .../mapreduce/hcat/SqoopHCatImportHelper.java      |    3 +--
+ .../cloudera/sqoop/lib/TestLargeObjectLoader.java  |    4 ++--
+ 9 files changed, 12 insertions(+), 23 deletions(-)
+
+diff --git a/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java b/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java
+index 43df7fc..8966579 100644
+--- a/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java
++++ b/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java
+@@ -47,10 +47,9 @@
+   /**
+    * Create a new LargeObjectLoader.
+    * @param conf the Configuration to use
+-   * @param workPath the HDFS working directory for this task.
+    */
+-  public LargeObjectLoader(Configuration conf, Path workPath)
++  public LargeObjectLoader(Configuration conf)
+       throws IOException {
+-    super(conf, workPath);
++    super(conf);
+   }
+ }
+diff --git a/src/java/org/apache/sqoop/lib/LargeObjectLoader.java b/src/java/org/apache/sqoop/lib/LargeObjectLoader.java
+index bc51277..a0f94d2 100644
+--- a/src/java/org/apache/sqoop/lib/LargeObjectLoader.java
++++ b/src/java/org/apache/sqoop/lib/LargeObjectLoader.java
+@@ -69,12 +69,11 @@
+   /**
+    * Create a new LargeObjectLoader.
+    * @param conf the Configuration to use
+-   * @param workPath the HDFS working directory for this task.
+    */
+-  public LargeObjectLoader(Configuration conf, Path workPath)
++  public LargeObjectLoader(Configuration conf)
+       throws IOException {
+     this.conf = conf;
+-    this.workPath = workPath;
++    this.workPath = new Path(System.getProperty("java.io.tmpdir"), "SQOOP");
+     this.fs = FileSystem.get(conf);
+     this.curBlobWriter = null;
+     this.curClobWriter = null;
+diff --git a/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java b/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java
+index 6fc656f..6adad79 100644
+--- a/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java
+@@ -52,8 +52,7 @@ protected void setup(Context context)
+       throws IOException, InterruptedException {
+     Configuration conf = context.getConfiguration();
+     schema = AvroJob.getMapOutputSchema(conf);
+-    lobLoader = new LargeObjectLoader(conf,
+-        FileOutputFormat.getWorkOutputPath(context));
++    lobLoader = new LargeObjectLoader(conf);
+     bigDecimalFormatString = conf.getBoolean(
+         ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT,
+         ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT_DEFAULT);
+diff --git a/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java b/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java
+index 9c9d6cd..10891e9 100644
+--- a/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java
+@@ -54,10 +54,7 @@
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+     this.conf = context.getConfiguration();
+-    Path largeFilePath = new Path(this.conf.get("sqoop.hbase.lob.extern.dir",
+-        "/tmp/sqoop-hbase-" + context.getTaskAttemptID()));
+-    this.lobLoader = new LargeObjectLoader(context.getConfiguration(),
+-        largeFilePath);
++    this.lobLoader = new LargeObjectLoader(this.conf);
+ 
+     // Get the implementation of PutTransformer to use.
+     // By default, we call toString() on every non-null field.
+diff --git a/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java b/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java
+index cc2982c..effbadd 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java
+@@ -42,9 +42,7 @@
+   @Override
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+-    Configuration conf = context.getConfiguration();
+-    Path workPath = new Path("/tmp/sqoop-parquet-" + context.getTaskAttemptID());
+-    lobLoader = new LargeObjectLoader(conf, workPath);
++    lobLoader = new LargeObjectLoader(context.getConfiguration());
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java b/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java
+index 528eeec..fde5d66 100644
+--- a/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java
+@@ -38,8 +38,7 @@
+   @Override
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+-    this.lobLoader = new LargeObjectLoader(context.getConfiguration(),
+-        FileOutputFormat.getWorkOutputPath(context));
++    this.lobLoader = new LargeObjectLoader(context.getConfiguration());
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java b/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java
+index a63faed..f0bca93 100644
+--- a/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java
+@@ -45,8 +45,7 @@ public TextImportMapper() {
+   @Override
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+-    this.lobLoader = new LargeObjectLoader(context.getConfiguration(),
+-        FileOutputFormat.getWorkOutputPath(context));
++    this.lobLoader = new LargeObjectLoader(context.getConfiguration());
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java
+index c2fc2e5..598483d 100644
+--- a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java
++++ b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java
+@@ -112,8 +112,7 @@ public SqoopHCatImportHelper(Configuration conf) throws IOException,
+       hCatFullTableSchema.append(hfs);
+     }
+     fieldCount = hCatFullTableSchema.size();
+-    lobLoader = new LargeObjectLoader(conf, new Path(jobInfo.getTableInfo()
+-      .getTableLocation()));
++    lobLoader = new LargeObjectLoader(conf);
+     bigDecimalFormatString = conf.getBoolean(
+       ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT,
+       ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT_DEFAULT);
+diff --git a/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java b/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java
+index 7dada96..c6bebf7 100644
+--- a/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java
++++ b/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java
+@@ -49,14 +49,14 @@ public void setUp() throws IOException, InterruptedException {
+       conf.set(CommonArgs.FS_DEFAULT_NAME, CommonArgs.LOCAL_FS);
+     }
+     String tmpDir = System.getProperty("test.build.data", "/tmp/");
+-    this.outDir = new Path(new Path(tmpDir), "testLobLoader");
++    this.outDir = new Path(System.getProperty("java.io.tmpdir"));
+     FileSystem fs = FileSystem.get(conf);
+     if (fs.exists(outDir)) {
+       fs.delete(outDir, true);
+     }
+     fs.mkdirs(outDir);
+ 
+-    loader = new LargeObjectLoader(conf, outDir);
++    loader = new LargeObjectLoader(conf);
+   }
+ 
+   public void testReadClobRef()
+-- 
+1.7.0.4
+

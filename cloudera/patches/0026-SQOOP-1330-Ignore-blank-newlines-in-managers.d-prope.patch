@@ -1,0 +1,27 @@
+From b98f05108d33d8d092d4ccbafb3f23d7ab610e2e Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 25 Aug 2014 07:57:47 +0200
+Subject: [PATCH 026/101] SQOOP-1330: Ignore blank newlines in managers.d property files
+
+(Chiwan Park via Jarek Jarcec Cecho)
+---
+ src/java/org/apache/sqoop/ConnFactory.java |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/ConnFactory.java b/src/java/org/apache/sqoop/ConnFactory.java
+index 2276525..e9c45bc 100644
+--- a/src/java/org/apache/sqoop/ConnFactory.java
++++ b/src/java/org/apache/sqoop/ConnFactory.java
+@@ -220,6 +220,9 @@ private void addManagersFromFile(Configuration conf, File f) {
+       Properties props = new Properties();
+       String line;
+       while ((line = r.readLine()) != null) {
++        if ("".equals(line.trim())) {
++          continue;
++        }
+         int separator = line.indexOf('=');
+         if (separator == -1) {
+           throw new IOException("the content of connector file must be "
+-- 
+1.7.0.4
+

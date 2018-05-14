@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+<refentry lang="en">
+<refentryinfo>
+    <title>sqoop-codegen(1)</title>
+    <author>
+        <firstname>Sqoop</firstname>
+        <surname>Team</surname>
+    </author>
+    <authorinitials>ST</authorinitials>
+</refentryinfo>
+<refmeta>
+<refentrytitle>sqoop-codegen</refentrytitle>
+<manvolnum>1</manvolnum>
+<refmiscinfo class="source">&#160;</refmiscinfo>
+<refmiscinfo class="manual">&#160;</refmiscinfo>
+</refmeta>
+<refnamediv>
+    <refname>sqoop-codegen</refname>
+    <refpurpose>Generates wrapper classes to store and parse database records.</refpurpose>
+</refnamediv>
+<refsynopsisdiv id="_synopsis">
+<simpara><emphasis>sqoop-codegen</emphasis> &lt;generic-options&gt; &lt;tool-options&gt;</simpara>
+<simpara><emphasis>sqoop codegen</emphasis> &lt;generic-options&gt; &lt;tool-options&gt;</simpara>
+</refsynopsisdiv>
+<refsect1 id="_description">
+<title>DESCRIPTION</title>
+<simpara>The <literal>codegen</literal> tool generates Java classes which encapsulate and
+interpret imported records. The Java definition of a record is
+instantiated as part of the import process, but can also be performed
+separately. For example, if Java source is lost, it can be recreated.
+New versions of a class can be created which use different delimiters
+between fields, and so on.</simpara>
+</refsect1>
+<refsect1 id="_options">
+<title>OPTIONS</title>
+<simpara>The <literal>--connect</literal> and <literal>--table</literal> options are required.</simpara>
+<refsect2 id="_database_connection_and_common_options">
+<title>Database connection and common options</title>
+<variablelist>
+<varlistentry>
+<term>
+--connect (jdbc-uri)
+</term>
+<listitem>
+<simpara>
+  Specify JDBC connect string (required)
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--driver (class-name)
+</term>
+<listitem>
+<simpara>
+  Manually specify JDBC driver class to use
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--connection-param-file (filename)
+</term>
+<listitem>
+<simpara>
+  Optional properties file that provides connection parameters
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<variablelist>
+<varlistentry>
+<term>
+--connection-manager (class-name)
+</term>
+<listitem>
+<simpara>
+  Specify connection manager class name (optional)
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--hadoop-mapred-home (dir)
+</term>
+<listitem>
+<simpara>
+  Override $HADOOP_MAPRED_HOME
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--help
+</term>
+<listitem>
+<simpara>
+  Print usage instructions
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--password-file (file containing the password)
+</term>
+<listitem>
+<simpara>
+  Set authentication password in a file on the users home
+  directory with 400 permissions
+  (Note: This is very secure and a preferred way of entering credentials)
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--password (password)
+</term>
+<listitem>
+<simpara>
+  Set authentication password
+  (Note: This is very insecure. You should use -P instead.)
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+-P
+</term>
+<listitem>
+<simpara>
+  Prompt for user password
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--username (username)
+</term>
+<listitem>
+<simpara>
+  Set authentication username
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--verbose
+</term>
+<listitem>
+<simpara>
+  Print more information while working
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--hadoop-home (dir)
+</term>
+<listitem>
+<simpara>
+  Deprecated. Override $HADOOP_HOME
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 id="_code_generation_options">
+<title>Code generation options</title>
+<variablelist>
+<varlistentry>
+<term>
+--bindir (dir)
+</term>
+<listitem>
+<simpara>
+  Output directory for compiled objects
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--class-name (name)
+</term>
+<listitem>
+<simpara>
+  Sets the name of the class to generate. By default, classes are
+  named after the table they represent. Using this parameters
+  ignores <literal>--package-name</literal>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--outdir (dir)
+</term>
+<listitem>
+<simpara>
+  Output directory for generated code
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--package-name (package)
+</term>
+<listitem>
+<simpara>
+  Puts auto-generated classes in the named Java package
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--table (table-name)
+</term>
+<listitem>
+<simpara>
+  The table to read (required)
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 id="_output_line_formatting_options">
+<title>Output line formatting options</title>
+<simpara>The delimiters used to separate fields and records can be specified
+on the command line, as can a quoting character and an escape character
+(for quoting delimiters inside a values). Data imported with
+<literal>--as-textfile</literal> will be formatted according to these parameters. Classes
+generated by Sqoop will encode this information, so using <literal>toString()</literal>
+from a data record stored <literal>--as-sequencefile</literal> will reproduce your
+specified formatting.</simpara>
+<simpara>The <literal>(char)</literal> argument for each argument in this section can be specified
+either as a normal character (e.g., <literal>--fields-terminated-by ,</literal>) or via
+an escape sequence. Arguments of the form <literal>\0xhhh</literal> will be interpreted
+as a hexidecimal representation of a character with hex number <emphasis>hhh</emphasis>.
+Arguments of the form <literal>\0ooo</literal> will be treated as an octal representation
+of a character represented by octal number <emphasis>ooo</emphasis>. The special escapes
+<literal>\n</literal>, <literal>\r</literal>, <literal>\"</literal>, <literal>\b</literal>, <literal>\t</literal>, and <literal>\\</literal> act as they do inside Java strings. <literal>\0</literal> will be
+treated as NUL. This will insert NUL characters between fields or lines
+(if used for <literal>--fields-terminated-by</literal> or <literal>--lines-terminated-by</literal>), or will
+disable enclosing/escaping if used for one of the <literal>--enclosed-by</literal>,
+<literal>--optionally-enclosed-by</literal>, or <literal>--escaped-by</literal> arguments.</simpara>
+<simpara>The default delimiters are <literal>,</literal> for fields, <literal>\n</literal> for records, no quote
+character, and no escape character. Note that this can lead to
+ambiguous/unparsible records if you import database records containing
+commas or newlines in the field data. For unambiguous parsing, both must
+be enabled, e.g., via <literal>--mysql-delimiters</literal>.</simpara>
+<variablelist>
+<varlistentry>
+<term>
+--fields-terminated-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets the field separator character
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--lines-terminated-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets the end-of-line character
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--optionally-enclosed-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets a field-enclosing character which may be used if a
+  value contains delimiter characters.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--enclosed-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets a field-enclosing character which will be used for all fields.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--escaped-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets the escape character
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--mysql-delimiters
+</term>
+<listitem>
+<simpara>
+Uses MySQL&#8217;s default delimiter set:
+</simpara>
+<simpara>fields: ,  lines: \n  escaped-by: \  optionally-enclosed-by: '</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 id="_input_line_parsing_options">
+<title>Input line parsing options</title>
+<simpara>Record classes generated by Sqoop include both a <literal>toString()</literal> method
+that formats output records, and a <literal>parse()</literal> method that interprets
+text based on an input delimiter set. The input delimiters default to
+the same ones chosen for output delimiters, but you can override these
+settings to support converting from one set of delimiters to another.</simpara>
+<variablelist>
+<varlistentry>
+<term>
+--input-fields-terminated-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets the input field separator
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--input-lines-terminated-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets the input end-of-line char
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--input-optionally-enclosed-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets an input field-enclosing character
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--input-enclosed-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets a required input field encloser
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--input-escaped-by (char)
+</term>
+<listitem>
+<simpara>
+  Sets the input escape character
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+<refsect2 id="_hive_options">
+<title>Hive options</title>
+<variablelist>
+<varlistentry>
+<term>
+--hive-home (dir)
+</term>
+<listitem>
+<simpara>
+  Override $HIVE_HOME
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--hive-import
+</term>
+<listitem>
+<simpara>
+  If set, then import the table or mainframe dataset into Hive
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--hive-overwrite
+</term>
+<listitem>
+<simpara>
+  Overwrites existing data in the hive table if it exists.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--create-hive-table
+</term>
+<listitem>
+<simpara>
+  If set, then the job will fail if the target hive table exits.
+  By default this property is false.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--hive-table (table-name)
+</term>
+<listitem>
+<simpara>
+  When used with --hive-import, overrides the destination table name
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+--map-column-hive (mapping)
+</term>
+<listitem>
+<simpara>
+        Override default mapping for SQL types or input field types into Hive types for configured columns
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect2>
+</refsect1>
+<refsect1 id="_environment">
+<title>ENVIRONMENT</title>
+<simpara>See <emphasis>sqoop(1)</emphasis></simpara>
+</refsect1>
+</refentry>

@@ -1,0 +1,44 @@
+From 09c78858c0a6fc34ff174e80555a5e27517351d4 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abe@apache.org>
+Date: Tue, 24 Feb 2015 18:07:45 -0800
+Subject: [PATCH 080/101] SQOOP-2130: BaseSqoopTestCase should use manager.escapeTable instead of directly hardcoding double quotes
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ .../cloudera/sqoop/testutil/BaseSqoopTestCase.java |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java b/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java
+index cc5cbd7..7934791 100644
+--- a/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java
++++ b/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java
+@@ -281,7 +281,7 @@ protected String getColName(int i) {
+   protected void dropTableIfExists(String table) throws SQLException {
+     Connection conn = getManager().getConnection();
+     PreparedStatement statement = conn.prepareStatement(
+-        "DROP TABLE \"" + table + "\" IF EXISTS",
++        "DROP TABLE " + manager.escapeTableName(table) + " IF EXISTS",
+         ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+     try {
+       statement.executeUpdate();
+@@ -322,7 +322,7 @@ protected void createTableWithColTypesAndNames(String[] colNames,
+           }
+         }
+ 
+-        createTableStr = "CREATE TABLE \"" + getTableName() + "\"(" + columnDefStr + ")";
++        createTableStr = "CREATE TABLE " + manager.escapeTableName(getTableName()) + "(" + columnDefStr + ")";
+         LOG.info("Creating table: " + createTableStr);
+         statement = conn.prepareStatement(
+             createTableStr,
+@@ -356,7 +356,7 @@ protected void createTableWithColTypesAndNames(String[] colNames,
+           }
+         }
+         try {
+-          String insertValsStr = "INSERT INTO \"" + getTableName() + "\"(" + columnListStr + ")"
++          String insertValsStr = "INSERT INTO " + manager.escapeTableName(getTableName()) + "(" + columnListStr + ")"
+               + " VALUES(" + valueListStr + ")";
+           LOG.info("Inserting values: " + insertValsStr);
+           statement = conn.prepareStatement(
+-- 
+1.7.0.4
+

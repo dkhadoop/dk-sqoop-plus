@@ -1,0 +1,62 @@
+From 0c6d0d1dbdfa149cad5fb2fafd9d7ff5d02d0bad Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Fri, 19 Sep 2014 15:26:41 -0700
+Subject: [PATCH 044/101] CLOUDERA-BUILD. Add kite CDH version
+
+---
+ cloudera/maven-packaging/sqoop/pom.xml             |    8 ++++++--
+ cloudera/maven-packaging/templates/build.template  |    2 ++
+ .../maven-packaging/templates/libraries.template   |    1 +
+ 3 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/cloudera/maven-packaging/sqoop/pom.xml b/cloudera/maven-packaging/sqoop/pom.xml
+index aaa8a3e..715111a 100644
+--- a/cloudera/maven-packaging/sqoop/pom.xml
++++ b/cloudera/maven-packaging/sqoop/pom.xml
+@@ -91,7 +91,7 @@
+       <groupId>hsqldb</groupId>
+       <artifactId>hsqldb</artifactId>
+     </dependency>
+-    
++
+     <dependency>
+       <groupId>ant-contrib</groupId>
+       <artifactId>ant-contrib</artifactId>
+@@ -102,7 +102,11 @@
+       <artifactId>avro-mapred</artifactId>
+       <classifier>hadoop2</classifier>
+     </dependency>
+-    
++
++    <dependency>
++      <groupId>org.kitesdk</groupId>
++      <artifactId>kite-data-core</artifactId>
++    </dependency>
+   </dependencies>
+ 
+   <build>
+diff --git a/cloudera/maven-packaging/templates/build.template b/cloudera/maven-packaging/templates/build.template
+index c91760d..ae3b2bd 100644
+--- a/cloudera/maven-packaging/templates/build.template
++++ b/cloudera/maven-packaging/templates/build.template
+@@ -12,6 +12,8 @@ zookeeper.version=org.apache.zookeeper:zookeeper.version
+ 
+ avro.version=org.apache.avro:avro.version
+ 
++kite-data.version=org.kitesdk:kite-data-core.version
++
+ # Default build profiles for CDH
+ hadoopversion=200
+ hbaseprofile=95
+diff --git a/cloudera/maven-packaging/templates/libraries.template b/cloudera/maven-packaging/templates/libraries.template
+index 657fcc0..4a9f702 100644
+--- a/cloudera/maven-packaging/templates/libraries.template
++++ b/cloudera/maven-packaging/templates/libraries.template
+@@ -54,3 +54,4 @@ snappy.version=1.0.3.2
+ 
+ avro.version=org.apache.avro:avro.version
+ 
++kite-data.version=org.kitesdk:kite-data-core.version
+-- 
+1.7.0.4
+

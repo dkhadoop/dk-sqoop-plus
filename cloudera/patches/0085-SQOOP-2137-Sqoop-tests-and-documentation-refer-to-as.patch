@@ -1,0 +1,40 @@
+From 062c01ea6737a445bc2ece2d6114713c9c83f864 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Thu, 26 Feb 2015 09:02:19 -0800
+Subject: [PATCH 085/101] SQOOP-2137: Sqoop tests and documentation refer to as-avrofile (instead of as-avrodatafile)
+
+(Mark Grover via Jarek Jarcec Cecho)
+---
+ src/docs/user/hcatalog.txt                         |    2 +-
+ .../org/apache/sqoop/hcat/TestHCatalogBasic.java   |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/docs/user/hcatalog.txt b/src/docs/user/hcatalog.txt
+index 98f4ac5..99ae4f5 100644
+--- a/src/docs/user/hcatalog.txt
++++ b/src/docs/user/hcatalog.txt
+@@ -168,7 +168,7 @@ The following Sqoop export and import options are not supported with HCatalog jo
+ * +--warehouse-dir+
+ * +--append+
+ * +--as-sequencefile+
+-* +--as-avrofile+
++* +--as-avrodatafile+
+ * +--as-parquetfile+
+ 
+ Ignored Sqoop Options
+diff --git a/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java b/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java
+index ec60c9f..d33d456 100644
+--- a/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java
++++ b/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java
+@@ -192,7 +192,7 @@ public void testHCatImportWithAvroFile() throws Exception {
+       "dbtable",
+       "--hcatalog-table",
+       "table",
+-      "--as-avrofile",
++      "--as-avrodatafile",
+     };
+     try {
+       SqoopOptions opts = parseImportArgs(args);
+-- 
+1.7.0.4
+

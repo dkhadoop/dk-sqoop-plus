@@ -1,0 +1,67 @@
+From 6da972e8ca2e0d8cc2262916b2a4787f41c1cbf6 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Thu, 28 Aug 2014 18:08:51 -0700
+Subject: [PATCH 011/101] CLOUDERA-BUILD. Sqoop 1.4.5 rebase
+
+---
+ cloudera-pom.xml                       |    4 ++--
+ cloudera/maven-packaging/pom.xml       |    2 +-
+ cloudera/maven-packaging/sqoop/pom.xml |    4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/cloudera-pom.xml b/cloudera-pom.xml
+index be13ec3..ee5220e 100644
+--- a/cloudera-pom.xml
++++ b/cloudera-pom.xml
+@@ -21,13 +21,13 @@
+   <parent>
+     <groupId>com.cloudera.cdh</groupId>
+     <artifactId>sqoop-root</artifactId>
+-    <version>1.4.4-cdh5.2.0-SNAPSHOT</version>
++    <version>1.4.5-cdh5.2.0-SNAPSHOT</version>
+     <relativePath>cloudera/maven-packaging/pom.xml</relativePath>
+   </parent>
+   
+   <groupId>com.cloudera.cdh</groupId>
+   <artifactId>sqoop-ant</artifactId>
+-  <version>1.4.4-cdh5.2.0-SNAPSHOT</version>
++  <version>1.4.5-cdh5.2.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
+   
+   <scm>
+diff --git a/cloudera/maven-packaging/pom.xml b/cloudera/maven-packaging/pom.xml
+index 00e65dd..d6db015 100644
+--- a/cloudera/maven-packaging/pom.xml
++++ b/cloudera/maven-packaging/pom.xml
+@@ -27,7 +27,7 @@
+   
+   <groupId>com.cloudera.cdh</groupId>
+   <artifactId>sqoop-root</artifactId>
+-  <version>1.4.4-cdh5.2.0-SNAPSHOT</version>
++  <version>1.4.5-cdh5.2.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
+   
+   <name>CDH Sqoop root</name>
+diff --git a/cloudera/maven-packaging/sqoop/pom.xml b/cloudera/maven-packaging/sqoop/pom.xml
+index 9801571..aaa8a3e 100644
+--- a/cloudera/maven-packaging/sqoop/pom.xml
++++ b/cloudera/maven-packaging/sqoop/pom.xml
+@@ -23,13 +23,13 @@
+   <parent>
+     <groupId>com.cloudera.cdh</groupId>
+     <artifactId>sqoop-root</artifactId>
+-    <version>1.4.4-cdh5.2.0-SNAPSHOT</version>
++    <version>1.4.5-cdh5.2.0-SNAPSHOT</version>
+     <relativePath>../pom.xml</relativePath>
+   </parent>
+   
+   <groupId>org.apache.sqoop</groupId>
+   <artifactId>sqoop</artifactId>
+-  <version>1.4.4-cdh5.2.0-SNAPSHOT</version>
++  <version>1.4.5-cdh5.2.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
+   
+   <name>sqoop</name>
+-- 
+1.7.0.4
+

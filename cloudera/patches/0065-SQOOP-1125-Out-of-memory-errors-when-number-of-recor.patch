@@ -1,0 +1,93 @@
+From d33070d3749d5e1bf6d3da2cb8de90c9bf3d93b0 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 19 Nov 2014 15:15:05 -0800
+Subject: [PATCH 065/101] SQOOP-1125: Out of memory errors when number of records to import < 0.5 * splitSize
+
+(Sai Karthik Ganguru via Jarek Jarcec Cecho)
+---
+ .../sqoop/mapreduce/db/BigDecimalSplitter.java     |    2 +-
+ .../sqoop/mapreduce/db/TestBigDecimalSplitter.java |   59 ++++++++++++++++++++
+ 2 files changed, 60 insertions(+), 1 deletions(-)
+ create mode 100644 src/test/org/apache/sqoop/mapreduce/db/TestBigDecimalSplitter.java
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/db/BigDecimalSplitter.java b/src/java/org/apache/sqoop/mapreduce/db/BigDecimalSplitter.java
+index 7e3048a..ebe6c40 100644
+--- a/src/java/org/apache/sqoop/mapreduce/db/BigDecimalSplitter.java
++++ b/src/java/org/apache/sqoop/mapreduce/db/BigDecimalSplitter.java
+@@ -102,7 +102,7 @@ protected BigDecimal tryDivide(BigDecimal numerator, BigDecimal denominator) {
+     try {
+       return numerator.divide(denominator);
+     } catch (ArithmeticException ae) {
+-      return numerator.divide(denominator, BigDecimal.ROUND_HALF_UP);
++      return numerator.divide(denominator, BigDecimal.ROUND_UP);
+     }
+   }
+ 
+diff --git a/src/test/org/apache/sqoop/mapreduce/db/TestBigDecimalSplitter.java b/src/test/org/apache/sqoop/mapreduce/db/TestBigDecimalSplitter.java
+new file mode 100644
+index 0000000..1e557a5
+--- /dev/null
++++ b/src/test/org/apache/sqoop/mapreduce/db/TestBigDecimalSplitter.java
+@@ -0,0 +1,59 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.apache.sqoop.mapreduce.db;
++
++import java.math.BigDecimal;
++
++import junit.framework.TestCase;
++
++import com.cloudera.sqoop.mapreduce.db.BigDecimalSplitter;
++
++public class TestBigDecimalSplitter extends TestCase {
++
++  /* Test if the decimal split sizes are generated as expected */
++  public void testDecimalTryDivide() {
++    BigDecimal numerator = new BigDecimal("2");
++    BigDecimal denominator = new BigDecimal("4");
++	BigDecimal expected = new BigDecimal("0.5");
++	BigDecimalSplitter splitter = new BigDecimalSplitter();
++	BigDecimal out = splitter.tryDivide(numerator, denominator);
++	assertEquals(expected, out);
++  }
++
++  /* Test if the integer split sizes are generated as expected */
++  public void testIntegerTryDivide() {
++	BigDecimal numerator = new BigDecimal("99");
++	BigDecimal denominator = new BigDecimal("3");
++	BigDecimal expected = new BigDecimal("33");
++	BigDecimalSplitter splitter = new BigDecimalSplitter();
++	BigDecimal out = splitter.tryDivide(numerator, denominator);
++	assertEquals(expected, out);
++  }
++
++  /* Test if the recurring decimal split sizes are generated as expected */
++  public void testRecurringTryDivide() {
++	BigDecimal numerator = new BigDecimal("1");
++	BigDecimal denominator = new BigDecimal("3");
++	BigDecimal expected = new BigDecimal("1");
++	BigDecimalSplitter splitter = new BigDecimalSplitter();
++	BigDecimal out = splitter.tryDivide(numerator, denominator);
++	assertEquals(expected, out);
++  }
++
++}
+-- 
+1.7.0.4
+

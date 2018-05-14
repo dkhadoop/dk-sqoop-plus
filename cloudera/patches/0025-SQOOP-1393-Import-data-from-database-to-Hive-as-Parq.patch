@@ -1,0 +1,188 @@
+From 4929b25203859fe3678ae4bf6b86b27b04588419 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 25 Aug 2014 07:41:04 +0200
+Subject: [PATCH 025/101] SQOOP-1393: Import data from database to Hive as Parquet files
+
+(Richard via Jarek Jarcec Cecho)
+---
+ ivy.xml                                            |    4 +++-
+ ivy/libraries.properties                           |    2 +-
+ .../sqoop/mapreduce/DataDrivenImportJob.java       |    2 +-
+ src/java/org/apache/sqoop/mapreduce/JobBase.java   |   15 +++++++++++++++
+ src/java/org/apache/sqoop/tool/CodeGenTool.java    |   13 ++++++++-----
+ src/java/org/apache/sqoop/tool/ImportTool.java     |    6 +++++-
+ .../com/cloudera/sqoop/hive/TestHiveImport.java    |   17 +++++++++++++++++
+ testdata/hive/scripts/normalImportAsParquet.q      |   17 +++++++++++++++++
+ 8 files changed, 67 insertions(+), 9 deletions(-)
+ create mode 100644 testdata/hive/scripts/normalImportAsParquet.q
+
+diff --git a/ivy.xml b/ivy.xml
+index a6dafd2..fd89f45 100644
+--- a/ivy.xml
++++ b/ivy.xml
+@@ -186,7 +186,9 @@ under the License.
+       conf="common->default;redist->default"/>
+     <dependency org="commons-io" name="commons-io" rev="${commons-io.version}"
+       conf="common->default;redist->default"/>
+-    <dependency org="org.kitesdk" name="kite-data-mapreduce" rev="${kite-data-mapreduce.version}"
++    <dependency org="org.kitesdk" name="kite-data-mapreduce" rev="${kite-data.version}"
++      conf="avro->default;redist->default"/>
++    <dependency org="org.kitesdk" name="kite-data-hcatalog" rev="${kite-data.version}"
+       conf="avro->default;redist->default"/>
+ 
+     <!-- dependencies for static analysis -->
+diff --git a/ivy/libraries.properties b/ivy/libraries.properties
+index cbcbf0d..6818b3e 100644
+--- a/ivy/libraries.properties
++++ b/ivy/libraries.properties
+@@ -20,7 +20,7 @@
+ 
+ avro.version=1.7.5
+ 
+-kite-data-mapreduce.version=0.15.0
++kite-data.version=0.16.0
+ 
+ checkstyle.version=5.0
+ 
+diff --git a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+index 300406a..905ba8c 100644
+--- a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+@@ -106,7 +106,7 @@ protected void configureMapper(Job job, String tableName,
+       Schema schema = new Schema.Parser().parse(conf.get("avro.schema"));
+       String uri = "";
+       if (options.doHiveImport()) {
+-        // TODO: SQOOP-1393
++        uri = "dataset:hive?dataset=" + options.getTableName();
+       } else {
+         FileSystem fs = FileSystem.get(conf);
+         uri = "dataset:" + fs.makeQualified(getContext().getDestination());
+diff --git a/src/java/org/apache/sqoop/mapreduce/JobBase.java b/src/java/org/apache/sqoop/mapreduce/JobBase.java
+index 0ed6926..88cbfaa 100644
+--- a/src/java/org/apache/sqoop/mapreduce/JobBase.java
++++ b/src/java/org/apache/sqoop/mapreduce/JobBase.java
+@@ -180,6 +180,21 @@ protected void cacheJars(Job job, ConnManager mgr)
+           + "all job dependencies.");
+     }
+ 
++    // If the user run import into hive as Parquet file,
++    // Add anything in $HIVE_HOME/lib.
++    if (options.doHiveImport() && (options.getFileLayout() == SqoopOptions.FileLayout.ParquetFile)) {
++      String hiveHome = options.getHiveHome();
++      if (null != hiveHome) {
++        File hiveHomeFile = new File(hiveHome);
++        File hiveLibFile = new File(hiveHomeFile, "lib");
++        if (hiveLibFile.exists()) {
++          addDirToCache(hiveLibFile, fs, localUrls);
++        }
++      } else {
++        LOG.warn("HIVE_HOME is unset. Cannot add hive libs as dependencies.");
++      }
++    }
++
+     // If we didn't put anything in our set, then there's nothing to cache.
+     if (localUrls.isEmpty()) {
+       return;
+diff --git a/src/java/org/apache/sqoop/tool/CodeGenTool.java b/src/java/org/apache/sqoop/tool/CodeGenTool.java
+index a6d5dff..6bd7f1d 100644
+--- a/src/java/org/apache/sqoop/tool/CodeGenTool.java
++++ b/src/java/org/apache/sqoop/tool/CodeGenTool.java
+@@ -117,12 +117,15 @@ public int run(SqoopOptions options) {
+       // them to files (but don't actually perform the import -- thus
+       // the generateOnly=true in the constructor).
+       if (options.doHiveImport()) {
+-        HiveImport hiveImport = new HiveImport(options, manager,
+-            options.getConf(), true);
+-        hiveImport.importTable(options.getTableName(),
+-            options.getHiveTableName(), true);
++        // For Parquet file, the import action will create hive table directly
++        // via kite. So there is no need to create hive table again.
++        if (options.getFileLayout() != SqoopOptions.FileLayout.ParquetFile) {
++          HiveImport hiveImport = new HiveImport(options, manager,
++                  options.getConf(), true);
++          hiveImport.importTable(options.getTableName(),
++                  options.getHiveTableName(), true);
++        }
+       }
+-
+     } catch (IOException ioe) {
+       LOG.error("Encountered IOException running codegen job: "
+           + StringUtils.stringifyException(ioe));
+diff --git a/src/java/org/apache/sqoop/tool/ImportTool.java b/src/java/org/apache/sqoop/tool/ImportTool.java
+index 54e618e..bdb23bb 100644
+--- a/src/java/org/apache/sqoop/tool/ImportTool.java
++++ b/src/java/org/apache/sqoop/tool/ImportTool.java
+@@ -508,7 +508,11 @@ protected boolean importTable(SqoopOptions options, String tableName,
+ 
+     // If the user wants this table to be in Hive, perform that post-load.
+     if (options.doHiveImport()) {
+-      hiveImport.importTable(tableName, options.getHiveTableName(), false);
++      // For Parquet file, the import action will create hive table directly via
++      // kite. So there is no need to do hive import as a post step again.
++      if (options.getFileLayout() != SqoopOptions.FileLayout.ParquetFile) {
++        hiveImport.importTable(tableName, options.getHiveTableName(), false);
++      }
+     }
+ 
+     saveIncrementalState(options);
+diff --git a/src/test/com/cloudera/sqoop/hive/TestHiveImport.java b/src/test/com/cloudera/sqoop/hive/TestHiveImport.java
+index 9c2a91c..d6df196 100644
+--- a/src/test/com/cloudera/sqoop/hive/TestHiveImport.java
++++ b/src/test/com/cloudera/sqoop/hive/TestHiveImport.java
+@@ -24,6 +24,7 @@
+ import java.io.FileReader;
+ import java.io.IOException;
+ import java.util.ArrayList;
++import java.util.Arrays;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+@@ -262,6 +263,22 @@ public void testNormalHiveImport() throws IOException {
+         getArgv(false, null), new ImportTool());
+   }
+ 
++  /** Test that strings and ints are handled in the normal fashion as parquet
++   * file. */
++  @Test
++  public void testNormalHiveImportAsParquet() throws IOException {
++    final String TABLE_NAME = "NORMAL_HIVE_IMPORT_AS_PARQUET";
++    setCurTableName(TABLE_NAME);
++    setNumCols(3);
++    String [] types = { "VARCHAR(32)", "INTEGER", "CHAR(64)" };
++    String [] vals = { "'test'", "42", "'somestring'" };
++    String [] args_array = getArgv(false, null);
++    ArrayList<String> args = new ArrayList<String>(Arrays.asList(args_array));
++    args.add("--as-parquetfile");
++    runImportTest(TABLE_NAME, types, vals, "normalImportAsParquet.q", args.toArray(new String[0]),
++            new ImportTool());
++  }
++
+   /** Test that table is created in hive with no data import. */
+   @Test
+   public void testCreateOnlyHiveImport() throws IOException {
+diff --git a/testdata/hive/scripts/normalImportAsParquet.q b/testdata/hive/scripts/normalImportAsParquet.q
+new file mode 100644
+index 0000000..e434e9b
+--- /dev/null
++++ b/testdata/hive/scripts/normalImportAsParquet.q
+@@ -0,0 +1,17 @@
++-- Licensed to the Apache Software Foundation (ASF) under one
++-- or more contributor license agreements.  See the NOTICE file
++-- distributed with this work for additional information
++-- regarding copyright ownership.  The ASF licenses this file
++-- to you under the Apache License, Version 2.0 (the
++-- "License"); you may not use this file except in compliance
++-- with the License.  You may obtain a copy of the License at
++--
++--     http://www.apache.org/licenses/LICENSE-2.0
++--
++-- Unless required by applicable law or agreed to in writing, software
++-- distributed under the License is distributed on an "AS IS" BASIS,
++-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++-- See the License for the specific language governing permissions and
++-- limitations under the License.
++CREATE TABLE IF NOT EXISTS `NORMAL_HIVE_IMPORT_AS_PARQUET` ( `DATA_COL0` STRING, `DATA_COL1` INT, `DATA_COL2` STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\001' LINES TERMINATED BY '\012' STORED AS PARQUET;
++LOAD DATA INPATH 'file:BASEPATH/sqoop/warehouse/NORMAL_HIVE_IMPORT_AS_PARQUET' INTO TABLE `NORMAL_HIVE_IMPORT_AS_PARQUET`;
+-- 
+1.7.0.4
+

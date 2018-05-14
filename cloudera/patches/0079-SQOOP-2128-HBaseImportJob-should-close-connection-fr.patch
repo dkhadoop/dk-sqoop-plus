@@ -1,0 +1,28 @@
+From f9df089a441ccbfe09496ebc29eb5ab614f1ef5c Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 23 Feb 2015 22:16:25 -0800
+Subject: [PATCH 079/101] SQOOP-2128: HBaseImportJob should close connection from HBaseAdmin to HBase
+
+(Esteban Gutierrez via Jarek Jarcec Cecho)
+---
+ .../org/apache/sqoop/mapreduce/HBaseImportJob.java |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java b/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
+index 39c2765..523d0a7 100644
+--- a/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
+@@ -247,6 +247,10 @@ protected void jobSetup(Job job) throws IOException, ImportException {
+       }
+     }
+ 
++    // Make sure we close the connection to HBA, this is only relevant in
++    // unit tests
++    admin.close();
++
+     // Make sure HBase libraries are shipped as part of the job.
+     TableMapReduceUtil.addDependencyJars(job);
+     TableMapReduceUtil.addDependencyJars(conf, HTable.class);
+-- 
+1.7.0.4
+

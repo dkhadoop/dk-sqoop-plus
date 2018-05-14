@@ -1,0 +1,55 @@
+From f5d0bbaf01ac7950050d95a623be7633b4748763 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Sun, 9 Nov 2014 20:47:33 -0800
+Subject: [PATCH 059/101] SQOOP-1693: Upgrade Kite SDK to 0.17
+
+(Qian Xu via Jarek Jarcec Cecho)
+---
+ ivy.xml                              |    2 +-
+ ivy/libraries.properties             |    2 +-
+ testdata/hcatalog/conf/hive-site.xml |    4 ++++
+ 3 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/ivy.xml b/ivy.xml
+index eb4b1c1..3e230b8 100644
+--- a/ivy.xml
++++ b/ivy.xml
+@@ -192,7 +192,7 @@ under the License.
+       conf="common->default;redist->default"/>
+     <dependency org="org.kitesdk" name="kite-data-mapreduce" rev="${kite-data.version}"
+       conf="avro->default;redist->default"/>
+-    <dependency org="org.kitesdk" name="kite-data-hcatalog" rev="${kite-data.version}"
++    <dependency org="org.kitesdk" name="kite-data-hive" rev="${kite-data.version}"
+       conf="avro->default;redist->default">
+       <exclude org="com.twitter" module="parquet-hive-bundle"/>
+     </dependency>
+diff --git a/ivy/libraries.properties b/ivy/libraries.properties
+index 8f98739..fe309a0 100644
+--- a/ivy/libraries.properties
++++ b/ivy/libraries.properties
+@@ -20,7 +20,7 @@
+ 
+ avro.version=1.7.5
+ 
+-kite-data.version=0.16.0
++kite-data.version=0.17.0
+ 
+ checkstyle.version=5.0
+ 
+diff --git a/testdata/hcatalog/conf/hive-site.xml b/testdata/hcatalog/conf/hive-site.xml
+index c84af28..52b2fff 100644
+--- a/testdata/hcatalog/conf/hive-site.xml
++++ b/testdata/hcatalog/conf/hive-site.xml
+@@ -1,5 +1,9 @@
+ <configuration>
+   <property>
++    <name>kite.hive.allow-local-metastore</name>
++    <value>true</value>
++  </property>
++  <property>
+     <name>hive.metastore.local</name>
+     <value>true</value>
+   </property>
+-- 
+1.7.0.4
+

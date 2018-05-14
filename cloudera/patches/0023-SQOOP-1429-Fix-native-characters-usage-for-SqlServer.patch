@@ -1,0 +1,183 @@
+From c88e0fd173ef1a67a884a55e6a233071b58a4bc5 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 13 Aug 2014 17:28:32 -0700
+Subject: [PATCH 023/101] SQOOP-1429: Fix native characters usage for SqlServer object names
+
+(Venkat Ranganathan via Jarek Jarcec Cecho)
+---
+ .../org/apache/sqoop/manager/SQLServerManager.java |   23 ++++++++++++++--
+ .../mapreduce/db/DataDrivenDBInputFormat.java      |    6 +++-
+ .../apache/sqoop/mapreduce/db/NTextSplitter.java   |   28 ++++++++++++++++++++
+ .../apache/sqoop/mapreduce/db/TextSplitter.java    |   17 ++++++++++--
+ .../sqoop/mapreduce/db/TestTextSplitter.java       |    9 ++++++
+ 5 files changed, 75 insertions(+), 8 deletions(-)
+ create mode 100644 src/java/org/apache/sqoop/mapreduce/db/NTextSplitter.java
+
+diff --git a/src/java/org/apache/sqoop/manager/SQLServerManager.java b/src/java/org/apache/sqoop/manager/SQLServerManager.java
+index 625f7cd..fdd4e91 100644
+--- a/src/java/org/apache/sqoop/manager/SQLServerManager.java
++++ b/src/java/org/apache/sqoop/manager/SQLServerManager.java
+@@ -38,6 +38,7 @@
+ import com.cloudera.sqoop.mapreduce.JdbcUpdateExportJob;
+ import com.cloudera.sqoop.util.ExportException;
+ import com.cloudera.sqoop.util.ImportException;
++
+ import org.apache.sqoop.cli.RelatedOptions;
+ import org.apache.sqoop.mapreduce.sqlserver.SqlServerExportBatchOutputFormat;
+ import org.apache.sqoop.mapreduce.sqlserver.SqlServerInputFormat;
+@@ -226,15 +227,31 @@ protected String getSchemaQuery() {
+ 
+     return "'" + schema + "'";
+   }
+-
+   @Override
+   protected String getListColumnsQuery(String tableName) {
+     return
+-      super.getListColumnsQuery(tableName)
+-        + "  ORDER BY ORDINAL_POSITION";
++      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
++    + "WHERE TABLE_SCHEMA = (" + getSchemaQuery() + ") "
++    + "  AND TABLE_NAME = N'" + tableName + "' "
++    + "  ORDER BY ORDINAL_POSITION";
+   }
+ 
+   @Override
++  protected String getPrimaryKeyQuery(String tableName) {
++    return
++      "SELECT kcu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc, "
++    + "  INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu "
++    + "WHERE tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA "
++    + "  AND tc.TABLE_NAME = kcu.TABLE_NAME "
++    + "  AND tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA "
++    + "  AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME "
++    + "  AND tc.TABLE_SCHEMA = (" + getSchemaQuery() + ") "
++    + "  AND tc.TABLE_NAME = N'" + tableName + "' "
++    + "  AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'";
++  }
++
++
++  @Override
+   public String escapeColName(String colName) {
+     return escapeObjectName(colName);
+   }
+diff --git a/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java b/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java
+index 6b30820..2c59fe5 100644
+--- a/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java
++++ b/src/java/org/apache/sqoop/mapreduce/db/DataDrivenDBInputFormat.java
+@@ -97,10 +97,12 @@ protected DBSplitter getSplitter(int sqlDataType) {
+     case Types.DOUBLE:
+       return new FloatSplitter();
+ 
+-    case Types.CHAR:
++    case Types.NVARCHAR:
+     case Types.NCHAR:
++      return new NTextSplitter();
++
++    case Types.CHAR:
+     case Types.VARCHAR:
+-    case Types.NVARCHAR:
+     case Types.LONGVARCHAR:
+       return new TextSplitter();
+ 
+diff --git a/src/java/org/apache/sqoop/mapreduce/db/NTextSplitter.java b/src/java/org/apache/sqoop/mapreduce/db/NTextSplitter.java
+new file mode 100644
+index 0000000..805deed
+--- /dev/null
++++ b/src/java/org/apache/sqoop/mapreduce/db/NTextSplitter.java
+@@ -0,0 +1,28 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package org.apache.sqoop.mapreduce.db;
++
++/**
++ * Implement DBSplitter over native text strings.
++ */
++public class NTextSplitter extends TextSplitter {
++
++  public NTextSplitter() {
++    setUseNCharStrings(true);
++  }
++}
+diff --git a/src/java/org/apache/sqoop/mapreduce/db/TextSplitter.java b/src/java/org/apache/sqoop/mapreduce/db/TextSplitter.java
+index 6c512aa..d3085cd 100644
+--- a/src/java/org/apache/sqoop/mapreduce/db/TextSplitter.java
++++ b/src/java/org/apache/sqoop/mapreduce/db/TextSplitter.java
+@@ -39,6 +39,8 @@
+ 
+   private static final Log LOG = LogFactory.getLog(TextSplitter.class);
+ 
++  private boolean useNCharStrings = false;
++
+   /**
+    * This method needs to determine the splits between two user-provided
+    * strings.  In the case where the user's strings are 'A' and 'Z', this is
+@@ -90,8 +92,8 @@
+     // divide cleanly.
+     int numSplits = ConfigurationHelper.getConfNumMaps(conf);
+ 
+-    String lowClausePrefix = colName + " >= '";
+-    String highClausePrefix = colName + " < '";
++    String lowClausePrefix = colName + " >= " + (useNCharStrings ? "N'" : "'");
++    String highClausePrefix = colName + " < " + (useNCharStrings ? "N'" : "'");
+ 
+     // If there is a common prefix between minString and maxString, establish
+     // it and pull it out of minString and maxString.
+@@ -123,7 +125,8 @@
+       if (i == splitStrings.size() - 1) {
+         // This is the last one; use a closed interval.
+         splits.add(new DataDrivenDBInputFormat.DataDrivenDBInputSplit(
+-            lowClausePrefix + start + "'", colName + " <= '" + end + "'"));
++            lowClausePrefix + start + "'", colName
++            + " <= " + (useNCharStrings ? "N'" : "'") + end + "'"));
+       } else {
+         // Normal open-interval case.
+         splits.add(new DataDrivenDBInputFormat.DataDrivenDBInputSplit(
+@@ -225,4 +228,12 @@ public String bigDecimalToString(BigDecimal bd) {
+ 
+     return sb.toString();
+   }
++
++  public void setUseNCharStrings(boolean use) {
++    useNCharStrings = use;
++  }
++
++  public boolean isUseNCharStrings() {
++    return useNCharStrings;
++  }
+ }
+diff --git a/src/test/org/apache/sqoop/mapreduce/db/TestTextSplitter.java b/src/test/org/apache/sqoop/mapreduce/db/TestTextSplitter.java
+index e3d0c0c..9c007d3 100644
+--- a/src/test/org/apache/sqoop/mapreduce/db/TestTextSplitter.java
++++ b/src/test/org/apache/sqoop/mapreduce/db/TestTextSplitter.java
+@@ -134,4 +134,13 @@ public void testCommonPrefix() throws SQLException {
+     assertEquals("Hardy", splits.get(splits.size() -1));
+     assertEquals(6, splits.size());
+   }
++
++  public void testNChar() throws SQLException {
++    // Splits between 'Hand' and 'Hardy'
++    NTextSplitter splitter = new NTextSplitter();
++    assertEquals(true, splitter.isUseNCharStrings());
++    TextSplitter splitter2 = new TextSplitter();
++    assertEquals(false, splitter2.isUseNCharStrings());
++  }
++
+ }
+-- 
+1.7.0.4
+

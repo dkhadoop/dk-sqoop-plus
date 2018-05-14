@@ -1,0 +1,28 @@
+From 7fae392a0247add28068ccb944a6d01ae6bc0f38 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Tue, 18 Nov 2014 14:27:20 -0800
+Subject: [PATCH 060/101] CLOUDERA-BUILD. CDH-20842: Partial hadoop installation fix
+
+---
+ bin/configure-sqoop |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/bin/configure-sqoop b/bin/configure-sqoop
+index 1a03190..5b87c5e 100755
+--- a/bin/configure-sqoop
++++ b/bin/configure-sqoop
+@@ -45,6 +45,11 @@ if [ -z "${HADOOP_COMMON_HOME}" ]; then
+     HADOOP_COMMON_HOME=${HADOOP_HOME}
+   else
+     if [ -d "/usr/lib/hadoop" ]; then
++      if [ ! -f "/usr/lib/hadoop/bin/hadoop" ]; then
++        echo "ERROR: Detected incomplete Hadoop installation in /usr/lib/hadoop. This is likely because you have not removed packages in a parcel environment, or you have a leftover /usr/lib/hadoop directory. If you are using parcels, please remove the /usr/lib/hadoop directory."
++        exit 1
++      fi
++
+       HADOOP_COMMON_HOME=/usr/lib/hadoop
+     else
+       HADOOP_COMMON_HOME=${SQOOP_HOME}/../hadoop
+-- 
+1.7.0.4
+

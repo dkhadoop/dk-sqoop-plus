@@ -1,0 +1,29 @@
+From 2b57e7fba35438c4f2b12223dc83211eabb25325 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 23 Sep 2013 15:50:23 -0700
+Subject: [PATCH 004/101] CLOUDERA-BUILD. Setting JDK target to 1.6
+
+Conflicts:
+	build.xml
+---
+ build.xml |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index 292d2b0..78c1cad 100644
+--- a/build.xml
++++ b/build.xml
+@@ -295,8 +295,8 @@
+   <property name="src.tar.file" location="${build.dir}/${src.artifact.name}.tar.gz" />
+ 
+   <!-- compilation -->
+-  <property name="targetJavaVersion" value="1.7" />
+-  <property name="sourceJavaVersion" value="1.7" />
++  <property name="targetJavaVersion" value="1.6" />
++  <property name="sourceJavaVersion" value="1.6" />
+   <property name="javac.deprecation" value="off"/>
+   <property name="javac.debug" value="on"/>
+   <property name="build.encoding" value="ISO-8859-1"/>
+-- 
+1.7.0.4
+

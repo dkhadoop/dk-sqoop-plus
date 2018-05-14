@@ -1,0 +1,44 @@
+From 86d7b02d0d36779a1def336bfc9115dbe518329c Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Fri, 5 Sep 2014 08:44:56 +0200
+Subject: [PATCH 034/101] SQOOP-1494: Fix generateArvoSchema in DataDrivenImportJob
+
+(Qian Xu via Jarek Jarcec Cecho)
+---
+ .../sqoop/mapreduce/DataDrivenImportJob.java       |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+index 19ec542..938948f 100644
+--- a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+@@ -88,7 +88,7 @@ protected void configureMapper(Job job, String tableName,
+       job.setOutputValueClass(NullWritable.class);
+     } else if (options.getFileLayout()
+         == SqoopOptions.FileLayout.AvroDataFile) {
+-      Schema schema = generateArvoSchema(tableName);
++      Schema schema = generateAvroSchema(tableName);
+       try {
+         writeAvroSchema(schema);
+       } catch (final IOException e) {
+@@ -101,7 +101,7 @@ protected void configureMapper(Job job, String tableName,
+       Configuration conf = job.getConfiguration();
+       // An Avro schema is required for creating a dataset that manages
+       // Parquet data records. The import will fail, if schema is invalid.
+-      Schema schema = generateArvoSchema(tableName);
++      Schema schema = generateAvroSchema(tableName);
+       String uri;
+       if (options.doHiveImport()) {
+         uri = "dataset:hive?dataset=" + options.getTableName();
+@@ -115,7 +115,7 @@ protected void configureMapper(Job job, String tableName,
+     job.setMapperClass(getMapperClass());
+   }
+ 
+-  private Schema generateArvoSchema(String tableName) throws IOException {
++  private Schema generateAvroSchema(String tableName) throws IOException {
+     ConnManager connManager = getContext().getConnManager();
+     AvroSchemaGenerator generator = new AvroSchemaGenerator(options,
+         connManager, tableName);
+-- 
+1.7.0.4
+

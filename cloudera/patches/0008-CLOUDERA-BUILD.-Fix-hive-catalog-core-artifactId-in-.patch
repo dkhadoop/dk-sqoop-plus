@@ -1,0 +1,25 @@
+From 1ac3727ae4466e859c5505fb7c41722d9ac44773 Mon Sep 17 00:00:00 2001
+From: Andrew Bayer <andrew@cloudera.com>
+Date: Tue, 3 Dec 2013 10:27:34 -0800
+Subject: [PATCH 008/101] CLOUDERA-BUILD. Fix hive-catalog-core artifactId in POM
+
+---
+ cloudera/maven-packaging/sqoop/pom.xml |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/cloudera/maven-packaging/sqoop/pom.xml b/cloudera/maven-packaging/sqoop/pom.xml
+index aa0b764..c3d9ab2 100644
+--- a/cloudera/maven-packaging/sqoop/pom.xml
++++ b/cloudera/maven-packaging/sqoop/pom.xml
+@@ -84,7 +84,7 @@
+     
+     <dependency>
+       <groupId>org.apache.hive.hcatalog</groupId>
+-      <artifactId>hcatalog-core</artifactId>
++      <artifactId>hive-hcatalog-core</artifactId>
+     </dependency>
+ 
+     <dependency>
+-- 
+1.7.0.4
+

@@ -1,0 +1,30 @@
+From ed07fcd5d3745dcd84d1758af4d87713a0a8de4c Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Fri, 3 Apr 2015 09:11:34 -0700
+Subject: [PATCH 093/101] SQOOP-2282: Add validation check for --hive-import and --append
+
+(Abraham Elmahrek via Jarek Jarcec Cecho)
+---
+ src/java/org/apache/sqoop/tool/BaseSqoopTool.java |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/tool/BaseSqoopTool.java b/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
+index b41ee2d..0550d45 100644
+--- a/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
++++ b/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
+@@ -1390,6 +1390,12 @@ protected void validateHiveOptions(SqoopOptions options)
+         + "importing into SequenceFile format.");
+     }
+ 
++    if (options.doHiveImport()
++        && options.isAppendMode()) {
++      throw new InvalidOptionsException("Append mode for hive imports is not "
++          + " yet supported. Please remove the parameter --append-mode");
++    }
++
+     // Many users are reporting issues when they are trying to import data
+     // directly into hive warehouse. This should prevent users from doing
+     // so in case of a default location.
+-- 
+1.7.0.4
+

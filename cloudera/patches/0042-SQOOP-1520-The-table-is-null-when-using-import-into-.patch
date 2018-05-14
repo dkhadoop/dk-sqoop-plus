@@ -1,0 +1,26 @@
+From 9a6ef90075c5200646d0ed84e3c407d3680f7092 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 17 Sep 2014 09:44:27 +0200
+Subject: [PATCH 042/101] SQOOP-1520: The table is null when using import into hive as parquet file and query option
+
+(Richard via Jarek Jarcec Cecho)
+---
+ .../sqoop/mapreduce/DataDrivenImportJob.java       |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+index 938948f..71abeeb 100644
+--- a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+@@ -104,7 +104,7 @@ protected void configureMapper(Job job, String tableName,
+       Schema schema = generateAvroSchema(tableName);
+       String uri;
+       if (options.doHiveImport()) {
+-        uri = "dataset:hive?dataset=" + options.getTableName();
++        uri = "dataset:hive?dataset=" + options.getHiveTableName();
+       } else {
+         FileSystem fs = FileSystem.get(conf);
+         uri = "dataset:" + fs.makeQualified(getContext().getDestination());
+-- 
+1.7.0.4
+

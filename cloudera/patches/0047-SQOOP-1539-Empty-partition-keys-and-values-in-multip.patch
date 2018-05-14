@@ -1,0 +1,127 @@
+From 1c1c2cc9dfbceeaa1122fa2117475b459a0112bf Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 24 Sep 2014 16:44:27 -0700
+Subject: [PATCH 047/101] SQOOP-1539: Empty partition keys and values in multiple partition key hcatalog usage should be validated
+
+(Venkat Ranganathan via Jarek Jarcec Cecho)
+---
+ .../sqoop/mapreduce/hcat/SqoopHCatUtilities.java   |   25 ++++++++++++++++----
+ src/java/org/apache/sqoop/tool/BaseSqoopTool.java  |   15 ++++++++++++
+ .../org/apache/sqoop/hcat/TestHCatalogBasic.java   |   22 ++++++++++++++++-
+ 3 files changed, 56 insertions(+), 6 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java
+index b69b83e..599548d 100644
+--- a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java
++++ b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java
+@@ -288,11 +288,18 @@ public void configureHCat(final SqoopOptions opts, final Job job,
+     hCatStaticPartitionValues = new ArrayList<String>();
+     String partKeysString = options.getHCatalogPartitionKeys();
+     String partKeysVals = options.getHCatalogPartitionValues();
++    // Already validated
+     if (partKeysString != null) {
+       String[] keys = partKeysString.split(",");
+-      hCatStaticPartitionKeys.addAll(Arrays.asList(keys));
++      for (int i = 0; i < keys.length; ++i) {
++        String k = keys[i].trim();
++        hCatStaticPartitionKeys.add(k);
++      }
+       String[] vals = partKeysVals.split(",");
+-      hCatStaticPartitionValues.addAll(Arrays.asList(vals));
++      for (int i = 0; i < vals.length; ++i) {
++        String v = vals[i].trim();
++        hCatStaticPartitionValues.add(v);
++      }
+     } else {
+       partKeysString = options.getHivePartitionKey();
+       if (partKeysString != null) {
+@@ -370,8 +377,16 @@ public void configureHCat(final SqoopOptions opts, final Job job,
+         throw new IOException("Database column " + col + " not found in "
+           + " hcatalog table.");
+       }
+-      if (hCatStaticPartitionKeys != null
+-        && hCatStaticPartitionKeys.equals(col)) {
++      boolean skip=false;
++      if (hCatStaticPartitionKeys != null) {
++        for (String key : hCatStaticPartitionKeys) {
++          if (col.equals(key)) {
++            skip=true;
++            break;
++          }
++        }
++      }
++      if (skip) {
+         continue;
+       }
+       outputFieldList.add(hCatFullTableSchema.get(col));
+@@ -670,7 +685,7 @@ private void validateFieldAndColumnMappings() throws IOException {
+     }
+ 
+     IntWritable[] positions = new IntWritable[hCatFieldPositions.length];
+-    for (int i : hCatFieldPositions) {
++    for (int i = 0; i < hCatFieldPositions.length; ++i) {
+       positions[i] = new IntWritable(hCatFieldPositions[i]);
+     }
+ 
+diff --git a/src/java/org/apache/sqoop/tool/BaseSqoopTool.java b/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
+index 3104454..498ad79 100644
+--- a/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
++++ b/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
+@@ -1554,6 +1554,21 @@ protected void validateHCatalogOptions(SqoopOptions options)
+         throw new InvalidOptionsException("Number of static partition keys "
+           + "provided dpes match the number of partition values");
+       }
++
++      for (int i = 0; i < keys.length; ++i) {
++        String k = keys[i].trim();
++        if (k.isEmpty()) {
++          throw new InvalidOptionsException(
++            "Invalid HCatalog static partition key at position " + i);
++        }
++      }
++      for (int i = 0; i < vals.length; ++i) {
++        String v = vals[i].trim();
++        if (v.isEmpty()) {
++          throw new InvalidOptionsException(
++            "Invalid HCatalog static partition key at position " + v);
++        }
++      }
+     } else {
+       if (options.getHivePartitionKey() != null
+           && options.getHivePartitionValue() == null) {
+diff --git a/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java b/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java
+index 388cce5..ec60c9f 100644
+--- a/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java
++++ b/src/test/org/apache/sqoop/hcat/TestHCatalogBasic.java
+@@ -284,7 +284,27 @@ public void testHCatImportWithMismatchedKeysAndVals() throws Exception {
+       // expected.
+     }
+   }
+-
++  public void testHCatImportWithEmptyKeysAndVals() throws Exception {
++    String[] args = {
++      "--connect",
++      "jdbc:db:url",
++      "--table",
++      "dbtable",
++      "--hcatalog-table",
++      "table",
++      "--hcatalog-partition-keys",
++      "k1,",
++      "--hcatalog-partition-values",
++      ",v1",
++    };
++    try {
++      SqoopOptions opts = parseImportArgs(args);
++      importTool.validateOptions(opts);
++      fail("Expected InvalidOptionsException");
++    } catch (SqoopOptions.InvalidOptionsException ioe) {
++      // expected.
++    }
++  }
+   public void testHCatImportWithBothHCatAndHivePartOptions() throws Exception {
+     String[] args = {
+       "--connect",
+-- 
+1.7.0.4
+

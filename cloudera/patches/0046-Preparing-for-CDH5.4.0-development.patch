@@ -1,0 +1,74 @@
+From 863d44f816ae3c05a9df3b0fd982cee1e521e705 Mon Sep 17 00:00:00 2001
+From: Jenkins slave <kitchen-build@cloudera.com>
+Date: Tue, 28 Oct 2014 10:21:40 -0700
+Subject: [PATCH 046/101] Preparing for CDH5.4.0 development
+
+---
+ cloudera-pom.xml                       |    4 ++--
+ cloudera/maven-packaging/pom.xml       |    4 ++--
+ cloudera/maven-packaging/sqoop/pom.xml |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/cloudera-pom.xml b/cloudera-pom.xml
+index 5839983..b310a2d 100644
+--- a/cloudera-pom.xml
++++ b/cloudera-pom.xml
+@@ -21,13 +21,13 @@
+   <parent>
+     <groupId>com.cloudera.cdh</groupId>
+     <artifactId>sqoop-root</artifactId>
+-    <version>1.4.5-cdh5.3.0-SNAPSHOT</version>
++    <version>1.4.5-cdh5.4.0-SNAPSHOT</version>
+     <relativePath>cloudera/maven-packaging/pom.xml</relativePath>
+   </parent>
+   
+   <groupId>com.cloudera.cdh</groupId>
+   <artifactId>sqoop-ant</artifactId>
+-  <version>1.4.5-cdh5.3.0-SNAPSHOT</version>
++  <version>1.4.5-cdh5.4.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
+   
+   <scm>
+diff --git a/cloudera/maven-packaging/pom.xml b/cloudera/maven-packaging/pom.xml
+index c602ab9..68382bc 100644
+--- a/cloudera/maven-packaging/pom.xml
++++ b/cloudera/maven-packaging/pom.xml
+@@ -21,13 +21,13 @@
+   <parent>
+     <groupId>com.cloudera.cdh</groupId>
+     <artifactId>cdh-root</artifactId>
+-    <version>5.3.0-SNAPSHOT</version>
++    <version>5.4.0-SNAPSHOT</version>
+     <relativePath>../../../../../pom.xml</relativePath>
+   </parent>
+   
+   <groupId>com.cloudera.cdh</groupId>
+   <artifactId>sqoop-root</artifactId>
+-  <version>1.4.5-cdh5.3.0-SNAPSHOT</version>
++  <version>1.4.5-cdh5.4.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
+   
+   <name>CDH Sqoop root</name>
+diff --git a/cloudera/maven-packaging/sqoop/pom.xml b/cloudera/maven-packaging/sqoop/pom.xml
+index 617e4ee..a8418ec 100644
+--- a/cloudera/maven-packaging/sqoop/pom.xml
++++ b/cloudera/maven-packaging/sqoop/pom.xml
+@@ -23,13 +23,13 @@
+   <parent>
+     <groupId>com.cloudera.cdh</groupId>
+     <artifactId>sqoop-root</artifactId>
+-    <version>1.4.5-cdh5.3.0-SNAPSHOT</version>
++    <version>1.4.5-cdh5.4.0-SNAPSHOT</version>
+     <relativePath>../pom.xml</relativePath>
+   </parent>
+   
+   <groupId>org.apache.sqoop</groupId>
+   <artifactId>sqoop</artifactId>
+-  <version>1.4.5-cdh5.3.0-SNAPSHOT</version>
++  <version>1.4.5-cdh5.4.0-SNAPSHOT</version>
+   <packaging>pom</packaging>
+   
+   <name>sqoop</name>
+-- 
+1.7.0.4
+

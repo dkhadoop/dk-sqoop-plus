@@ -1,0 +1,25 @@
+From 7950da2aef6d3cae36e1a9c03aa213a7281f4154 Mon Sep 17 00:00:00 2001
+From: Andrew Bayer <andrew@cloudera.com>
+Date: Tue, 3 Dec 2013 09:28:52 -0800
+Subject: [PATCH 007/101] CLOUDERA-BUILD. Fix hcatalog dependency detection
+
+---
+ cloudera/maven-packaging/templates/build.template |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/cloudera/maven-packaging/templates/build.template b/cloudera/maven-packaging/templates/build.template
+index 2276b88..c91760d 100644
+--- a/cloudera/maven-packaging/templates/build.template
++++ b/cloudera/maven-packaging/templates/build.template
+@@ -6,7 +6,7 @@ hadoop.version=org.apache.hadoop:hadoop-main.version
+ 
+ hbase95.version=org.apache.hbase:hbase-common.version
+ 
+-hcatalog.version=org.apache.hive.hcatalog:hcatalog-core.version
++hcatalog.version=org.apache.hive:hive-common.version
+ 
+ zookeeper.version=org.apache.zookeeper:zookeeper.version
+ 
+-- 
+1.7.0.4
+

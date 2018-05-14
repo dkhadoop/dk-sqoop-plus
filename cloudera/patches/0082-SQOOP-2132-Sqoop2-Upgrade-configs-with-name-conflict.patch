@@ -1,0 +1,89 @@
+From 255a140aef142f3db10cbcaa5539b91b33304630 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abe@apache.org>
+Date: Wed, 25 Feb 2015 17:50:02 -0800
+Subject: [PATCH 082/101] SQOOP-2132: Sqoop2: Upgrade configs with name conflicts
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ .../apache/sqoop/tool/TestMainframeImportTool.java |   47 --------------------
+ 1 files changed, 0 insertions(+), 47 deletions(-)
+
+diff --git a/src/test/org/apache/sqoop/tool/TestMainframeImportTool.java b/src/test/org/apache/sqoop/tool/TestMainframeImportTool.java
+index 936afd3..d91bbbe 100644
+--- a/src/test/org/apache/sqoop/tool/TestMainframeImportTool.java
++++ b/src/test/org/apache/sqoop/tool/TestMainframeImportTool.java
+@@ -18,8 +18,6 @@
+ 
+ package org.apache.sqoop.tool;
+ 
+-import java.io.ByteArrayOutputStream;
+-import java.io.PrintStream;
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
+ 
+@@ -43,13 +41,10 @@
+ 
+   private MainframeImportTool mfImportTool;
+ 
+-  private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+-
+   @Before
+   public void setUp() {
+ 
+     mfImportTool = new MainframeImportTool();
+-    System.setOut(new PrintStream(outContent));
+   }
+ 
+   @After
+@@ -57,48 +52,6 @@ public void tearDown() {
+     System.setOut(null);
+   }
+ 
+-  @Test
+-  public void testPrintHelp() {
+-    ToolOptions toolOptions = new ToolOptions();
+-    String separator = System.getProperty("line.separator");
+-    mfImportTool.printHelp(toolOptions);
+-    String outputMsg = "usage: sqoop "
+-        + mfImportTool.getToolName()
+-        + " [GENERIC-ARGS] [TOOL-ARGS]"
+-        + separator
+-        + ""
+-        + separator
+-        + ""
+-        + separator
+-        + "Generic Hadoop command-line arguments:"
+-        + separator
+-        + "(must preceed any tool-specific arguments)"
+-        + separator
+-        + "Generic options supported are"
+-        + separator
+-        + "-conf <configuration file>     specify an application configuration file"
+-        + separator
+-        + "-D <property=value>            use value for given property"
+-        + separator
+-        + "-fs <local|namenode:port>      specify a namenode"
+-        + separator
+-        + "-jt <local|jobtracker:port>    specify a job tracker"
+-        + separator
+-        + "-files <comma separated list of files>    "
+-        + "specify comma separated files to be copied to the map reduce cluster"
+-        + separator
+-        + "-libjars <comma separated list of jars>    "
+-        + "specify comma separated jar files to include in the classpath."
+-        + separator
+-        + "-archives <comma separated list of archives>    "
+-        + "specify comma separated archives to be unarchived on the compute machines.\n"
+-        + separator + "The general command line syntax is" + separator
+-        + "bin/hadoop command [genericOptions] [commandOptions]\n" + separator
+-        + "" + separator + "At minimum, you must specify --connect and --"
+-        + MainframeImportTool.DS_ARG + separator;
+-    assertEquals(outputMsg, outContent.toString());
+-  }
+-
+   @SuppressWarnings("deprecation")
+   @Test
+   public void testGetImportOptions() throws SecurityException,
+-- 
+1.7.0.4
+

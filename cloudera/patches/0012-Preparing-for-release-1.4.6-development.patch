@@ -1,0 +1,27 @@
+From 910fb22e43bf3ff9ea557364e55f200a19cae1fa Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 23 Jul 2014 14:01:57 -0700
+Subject: [PATCH 012/101] Preparing for release 1.4.6 development
+
+Conflicts:
+	build.xml
+---
+ build.xml |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index 78c1cad..b3909a4 100644
+--- a/build.xml
++++ b/build.xml
+@@ -230,7 +230,7 @@
+   <property name="oldversion" value="1.4.4" />
+   <!-- The point when we branched for the previous release. -->
+   <property name="prev.git.hash"
+-      value="166417fdb0afd3141c6fd0fdc50043b5e13c2a97" />
++      value="81624ddf3c8ca5834ab015ebafc8b8649ac36ab7" />
+ 
+   <property name="artifact.name" value="${name}-${version}" />
+   <property name="dest.jar" value="${artifact.name}.jar" />
+-- 
+1.7.0.4
+

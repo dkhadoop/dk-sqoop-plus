@@ -1,0 +1,766 @@
+From 3df5a8c1e8e5f8bdd69efff48e33191582105fa5 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Tue, 13 Aug 2013 11:51:10 -0700
+Subject: [PATCH 001/101] CLOUDERA-BUILD. Backports for CDH build
+
+Conflicts:
+	ivy.xml
+---
+ build.xml                                          |   51 +++++-
+ cloudera-pom.xml                                   |  187 ++++++++++++++++++++
+ cloudera/maven-packaging/pom.xml                   |   76 ++++++++
+ cloudera/maven-packaging/sqoop/pom.xml             |  167 +++++++++++++++++
+ cloudera/maven-packaging/templates/build.template  |   18 ++
+ .../maven-packaging/templates/libraries.template   |   56 ++++++
+ ivy.xml                                            |    9 +-
+ ivy/ivysettings.xml                                |   20 ++-
+ 8 files changed, 572 insertions(+), 12 deletions(-)
+ create mode 100644 cloudera-pom.xml
+ create mode 100644 cloudera/maven-packaging/pom.xml
+ create mode 100644 cloudera/maven-packaging/sqoop/pom.xml
+ create mode 100644 cloudera/maven-packaging/templates/build.template
+ create mode 100644 cloudera/maven-packaging/templates/libraries.template
+
+diff --git a/build.xml b/build.xml
+index b1ef825..a038e9d 100644
+--- a/build.xml
++++ b/build.xml
+@@ -31,6 +31,26 @@
+     </classpath>
+   </taskdef>
+ 
++ <!-- Initializes ivy/libraries.properties and build.properties with CDH versions -->
++ <if>
++   <and>
++     <not>
++       <isset property="cdh.maven" />
++     </not>
++     <not>
++       <available file="${basedir}/cdh.build.properties" />
++     </not>
++   </and>
++   <then>
++     <exec  executable="mvn" dir="${basedir}" failonerror="true">
++       <arg value="-f" />
++       <arg value="cloudera-pom.xml" />
++        <arg value="process-resources"/>
++     </exec>
++   </then>
++ </if>
++ <property file="${basedir}/cdh.build.properties" />
++
+   <!-- Set default Hadoop version if not set -->
+   <if>
+     <isset property="hadoopversion" />
+@@ -197,7 +217,9 @@
+        the user, to avoid needing to override with -D. -->
+   <property file="${user.home}/build.properties" />
+   <property file="${basedir}/build.properties" />
+-
++ 
++  <!-- used to mark if we're testing against mr1 -->
++  <property name="mr1.test" value="" />
+   <!-- some basic properties -->
+   <property environment="env"/>
+   <property name="name" value="sqoop" />
+@@ -262,7 +284,7 @@
+   <property name="relnotes.filename"
+       location="${build.relnotes.dir}/sqoop-${version}.releasenotes.html" />
+ 
+-  <property name="bin.artifact.name" value="${artifact.name}.bin__hadoop-${hadoop.version.full}" />
++  <property name="bin.artifact.name" value="${artifact.name}" />
+   <property name="dist.dir" location="${build.dir}/${bin.artifact.name}" />
+   <property name="tar.file" location="${build.dir}/${bin.artifact.name}.tar.gz" />
+   <property name="build.docs.timestamp"
+@@ -457,7 +479,7 @@
+   </path>
+ 
+   <!-- "init" target used for setup purposes. -->
+-  <target name="init">
++  <target name="init" depends="jvm-check">
+     <!-- Path containing third-party libraries deployed directly with Sqoop.
+          This does not include anything that Ivy can retrieve for us.
+       -->
+@@ -476,6 +498,22 @@
+     </path>
+   </target>
+ 
++  <!-- JVM version validation -->
++  <target name="jvm-check">
++      <property name="javaVersion" value="1.7"/>
++
++      <property name="requiredJavaVersion" value="xx${javaVersion}"/>
++      <property name="currentJavaVersion" value="xx${java.version}"/>
++      <condition property="jvm.fail">
++          <not>
++              <contains string="${currentJavaVersion}" substring="${requiredJavaVersion}"/>
++          </not>
++      </condition>
++      <fail if="jvm.fail">
++          Incorrect JVM, current = ${java.version}, required ${javaVersion}.
++      </fail>
++  </target>
++
+   <!-- generate the version information class. -->
+   <target name="gen-version" depends="init">
+     <if>
+@@ -1235,8 +1273,9 @@
+     <fail unless="continueOnFailure">Unit tests failed!</fail>
+   </target>
+ 
+-  <target name="clean" description="Clean build target files">
++  <target name="clean" depends="jvm-check" description="Clean build target files">
+     <delete dir="${build.dir}"/>
++    <delete file="${basedir}/cdh.build.properties" />
+   </target>
+ 
+   <target name="clean-cache" description="Remove cached dependencies">
+@@ -1424,7 +1463,7 @@
+   <!-- retrieve ivy-managed test artifacts from the Hadoop distribution -->
+   <target name="ivy-resolve-hadoop-test" depends="ivy-init"
+       unless="hadoop.is.local">
+-    <ivy:resolve settingsRef="${name}.ivy.settings" conf="hadoop${hadoopversion}test" />
++    <ivy:resolve settingsRef="${name}.ivy.settings" conf="hadoop${hadoopversion}${mr1.test}test" />
+   </target>
+   <target name="ivy-retrieve-hadoop-test"
+       depends="ivy-init,ivy-resolve-hadoop-test">
+@@ -1432,7 +1471,7 @@
+           pattern="${build.ivy.lib.dir}/${ivy.artifact.retrieve.pattern}"
+           sync="true" />
+         <ivy:cachepath pathid="${name}.hadooptest.classpath"
+-          conf="hadoop${hadoopversion}test" />
++          conf="hadoop${hadoopversion}${mr1.test}test" />
+   </target>
+ 
+   <!-- retrieve ivy-managed artifacts for checkstyle -->
+diff --git a/cloudera-pom.xml b/cloudera-pom.xml
+new file mode 100644
+index 0000000..b64ea78
+--- /dev/null
++++ b/cloudera-pom.xml
+@@ -0,0 +1,187 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!--
++   Licensed to the Apache Software Foundation (ASF) under one or more
++   contributor license agreements.  See the NOTICE file distributed with
++   this work for additional information regarding copyright ownership.
++   The ASF licenses this file to You under the Apache License, Version 2.0
++   (the "License"); you may not use this file except in compliance with
++   the License.  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++   Unless required by applicable law or agreed to in writing, software
++   distributed under the License is distributed on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++   See the License for the specific language governing permissions and
++   limitations under the License.
++-->
++<project>
++  <modelVersion>4.0.0</modelVersion>
++  
++  <parent>
++    <groupId>com.cloudera.cdh</groupId>
++    <artifactId>sqoop-root</artifactId>
++    <version>1.4.4-cdh5.0.0-SNAPSHOT</version>
++    <relativePath>cloudera/maven-packaging/pom.xml</relativePath>
++  </parent>
++  
++  <groupId>com.cloudera.cdh</groupId>
++  <artifactId>sqoop-ant</artifactId>
++  <version>1.4.4-cdh5.0.0-SNAPSHOT</version>
++  <packaging>pom</packaging>
++  
++  <scm>
++    <connection>scm:git:git@git.sf.cloudera.com:sqoop.git</connection>
++    <url>git@git.sf.cloudera.com:sqoop.git</url>
++  </scm>
++  
++  <description>Sqoop ant</description>
++  <name>Sqoop ant</name>
++  
++  <licenses>
++    <license>
++      <name>The Apache Software License, Version 2.0</name>
++      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
++    </license>
++  </licenses>
++  
++  <organization>
++    <name>Cloudera</name>
++    <url>http://www.cloudera.com</url>
++  </organization>
++  
++  <profiles>
++    <!--To allow standalone project to fetch CDH artifacts -->
++    <!--Activate by default doing a negation of negation   -->
++    <!-- this trick allows CDH root to switch it off       -->
++    <profile>
++      <id>cdh.repos</id>
++      <activation>
++        <activeByDefault>false</activeByDefault>
++        <property>
++          <name>use.cdh.repos</name>
++          <value>!false</value>
++        </property>
++      </activation>
++      <repositories>
++        <repository>
++          <id>cdh.releases.repo</id>
++          <url>https://repository.cloudera.com/content/group/cdh-releases-rcs</url>
++          <name>CDH Releases Repository</name>
++          <snapshots>
++            <enabled>false</enabled>
++          </snapshots>
++        </repository>
++        <repository>
++          <id>cdh.snapshots.repo</id>
++          <url>https://repository.cloudera.com/content/repositories/snapshots</url>
++          <name>CDH Snapshots Repository</name>
++          <snapshots>
++            <enabled>true</enabled>
++          </snapshots>
++        </repository>
++      </repositories>
++    </profile>
++    <!-- Similar logic to allow us to skip compilation/tests when run -->
++    <!-- via do-release-build or packaging scripts, since we're already -->
++    <!-- compiling via direct ant calls. -->
++    <profile>
++      <id>non.release.build</id>
++      <activation>
++        <activeByDefault>false</activeByDefault>
++        <property>
++          <name>not.cdh.release.build</name>
++          <value>!false</value>
++        </property>
++      </activation>
++      <build>
++        <plugins>
++          <plugin>
++            <groupId>org.apache.maven.plugins</groupId>
++            <artifactId>maven-antrun-plugin</artifactId>
++            <inherited>false</inherited>
++            <executions>
++              <execution>
++                <id>clean</id>
++                <configuration>
++                  <target>
++                    <exec executable="${ant.cmd}" dir="${basedir}" failonerror="true">
++                      <arg value="clean"/>
++                      <arg value="-Dcdh.maven=true"/>
++                      <arg value="-Divy.cache.dir=${ivy.cache.dir}"/>
++                      <arg value="-Drepo.maven.org=${repo.maven.org}"/>
++                    </exec>
++                  </target>
++                </configuration>
++                <goals>
++                  <goal>run</goal>
++                </goals>
++                <phase>clean</phase>
++              </execution>
++              <execution>
++                <id>compile</id>
++                <configuration>
++                  <target>
++                    <exec executable="${ant.cmd}" dir="${basedir}" failonerror="true">
++                      <arg value="jar-all"/>
++                      <arg value="-Dcdh.maven=true"/>
++                      <arg value="-Dreactor.repo=file://${maven.repo.local}"/>
++                      <arg value="-Divy.cache.dir=${ivy.cache.dir}"/>
++                      <arg value="-Drepo.maven.org=${repo.maven.org}"/>
++                    </exec>
++                  </target>
++                </configuration>
++                <goals>
++                  <goal>run</goal>
++                </goals>
++                <phase>compile</phase>
++              </execution>
++              <execution>
++                <id>test</id>
++                <configuration>
++                  <target unless="${skipTests}">
++                    <exec executable="${ant.cmd}" dir="${basedir}" failonerror="true">
++                      <arg value="test"/>
++                      <arg value="-Dcdh.maven=true"/>
++                      <arg value="-Dreactor.repo=file://${maven.repo.local}"/>
++                      <arg value="-Divy.cache.dir=${ivy.cache.dir}"/>
++                      <arg value="-Drepo.maven.org=${repo.maven.org}"/>
++                    </exec>
++                  </target>
++                </configuration>
++                <goals>
++                  <goal>run</goal>
++                </goals>
++                <phase>test</phase>
++              </execution>
++            </executions>
++          </plugin>
++        </plugins>
++      </build>
++    </profile>
++  </profiles>
++  
++  <build>
++    <plugins>
++      <plugin>
++        <groupId>com.cloudera.kitchen</groupId>
++        <artifactId>maven-deps-to-props-plugin</artifactId>
++        <executions>
++          <execution>
++            <id>build.properties</id>
++            <configuration>
++              <templateFile>${basedir}/cloudera/maven-packaging/templates/build.template</templateFile>
++              <targetFile>${basedir}/cdh.build.properties</targetFile>
++            </configuration>
++            <goals>
++              <goal>generate</goal>
++            </goals>
++            <phase>process-resources</phase>
++          </execution>
++        </executions>
++      </plugin>
++      
++    </plugins>
++  </build>
++  
++</project>
+diff --git a/cloudera/maven-packaging/pom.xml b/cloudera/maven-packaging/pom.xml
+new file mode 100644
+index 0000000..01aed7a
+--- /dev/null
++++ b/cloudera/maven-packaging/pom.xml
+@@ -0,0 +1,76 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!--
++   Licensed to the Apache Software Foundation (ASF) under one or more
++   contributor license agreements.  See the NOTICE file distributed with
++   this work for additional information regarding copyright ownership.
++   The ASF licenses this file to You under the Apache License, Version 2.0
++   (the "License"); you may not use this file except in compliance with
++   the License.  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++   Unless required by applicable law or agreed to in writing, software
++   distributed under the License is distributed on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++   See the License for the specific language governing permissions and
++   limitations under the License.
++-->
++<project>
++  <modelVersion>4.0.0</modelVersion>
++  
++  <parent>
++    <groupId>com.cloudera.cdh</groupId>
++    <artifactId>cdh-root</artifactId>
++    <version>5.0.0-SNAPSHOT</version>
++    <relativePath>../../../../../pom.xml</relativePath>
++  </parent>
++  
++  <groupId>com.cloudera.cdh</groupId>
++  <artifactId>sqoop-root</artifactId>
++  <version>1.4.4-cdh5.0.0-SNAPSHOT</version>
++  <packaging>pom</packaging>
++  
++  <name>CDH Sqoop root</name>
++  
++  <repositories>
++    <repository>
++      <id>cdh.releases.repo</id>
++      <url>https://repository.cloudera.com/content/groups/cdh-releases-rcs</url>
++      <name>CDH Releases Repository</name>
++      <snapshots>
++        <enabled>false</enabled>
++      </snapshots>
++    </repository>
++    <repository>
++      <id>cdh.snapshots.repo</id>
++      <url>https://repository.cloudera.com/content/repositories/snapshots</url>
++      <name>CDH Snapshots Repository</name>
++      <snapshots>
++        <enabled>true</enabled>
++      </snapshots>
++    </repository>
++  </repositories>
++
++  <modules>
++    <module>../../cloudera-pom.xml</module>
++    <module>sqoop</module>
++  </modules>
++  
++  <dependencies>
++  </dependencies>
++  
++  <build>
++    <plugins>
++      <plugin>
++        <groupId>org.apache.maven.plugins</groupId>
++        <artifactId>maven-jar-plugin</artifactId>
++        <configuration>
++          <archive>
++            <manifestFile>target/classes/META-INF/MANIFEST.MF</manifestFile>
++          </archive>
++        </configuration>
++      </plugin>
++    </plugins>
++  </build>
++</project>
++
+diff --git a/cloudera/maven-packaging/sqoop/pom.xml b/cloudera/maven-packaging/sqoop/pom.xml
+new file mode 100644
+index 0000000..dbc4677
+--- /dev/null
++++ b/cloudera/maven-packaging/sqoop/pom.xml
+@@ -0,0 +1,167 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!--
++   Licensed to the Apache Software Foundation (ASF) under one or more
++   contributor license agreements.  See the NOTICE file distributed with
++   this work for additional information regarding copyright ownership.
++   The ASF licenses this file to You under the Apache License, Version 2.0
++   (the "License"); you may not use this file except in compliance with
++   the License.  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++   Unless required by applicable law or agreed to in writing, software
++   distributed under the License is distributed on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++   See the License for the specific language governing permissions and
++   limitations under the License.
++-->
++<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
++
++  <modelVersion>4.0.0</modelVersion>
++  
++  <parent>
++    <groupId>com.cloudera.cdh</groupId>
++    <artifactId>sqoop-root</artifactId>
++    <version>1.4.4-cdh5.0.0-SNAPSHOT</version>
++    <relativePath>../pom.xml</relativePath>
++  </parent>
++  
++  <groupId>org.apache.sqoop</groupId>
++  <artifactId>sqoop</artifactId>
++  <version>1.4.4-cdh5.0.0-SNAPSHOT</version>
++  <packaging>pom</packaging>
++  
++  <name>sqoop</name>
++  
++  <dependencies>
++    <dependency>
++      <groupId>commons-cli</groupId>
++      <artifactId>commons-cli</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>commons-collections</groupId>
++      <artifactId>commons-collections</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>commons-lang</groupId>
++      <artifactId>commons-lang</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>commons-io</groupId>
++      <artifactId>commons-io</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>commons-logging</groupId>
++      <artifactId>commons-logging</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>org.apache.hadoop</groupId>
++      <artifactId>hadoop-common</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>org.apache.hadoop</groupId>
++      <artifactId>hadoop-hdfs</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>org.apache.hadoop</groupId>
++      <artifactId>hadoop-mapreduce-client-common</artifactId>
++    </dependency>
++    <dependency>
++      <groupId>org.apache.hadoop</groupId>
++      <artifactId>hadoop-mapreduce-client-core</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>org.apache.hbase</groupId>
++      <artifactId>hbase-common</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>org.apache.hcatalog</groupId>
++      <artifactId>hcatalog-core</artifactId>
++    </dependency>
++
++    <dependency>
++      <groupId>hsqldb</groupId>
++      <artifactId>hsqldb</artifactId>
++    </dependency>
++    
++    <dependency>
++      <groupId>ant-contrib</groupId>
++      <artifactId>ant-contrib</artifactId>
++    </dependency>
++
++    <dependency>
++      <groupId>org.apache.avro</groupId>
++      <artifactId>avro-mapred</artifactId>
++      <classifier>hadoop2</classifier>
++    </dependency>
++    
++  </dependencies>
++
++  <build>
++    <plugins>
++      <plugin>
++        <groupId>org.codehaus.mojo</groupId>
++        <artifactId>build-helper-maven-plugin</artifactId>
++        <executions>
++          <execution>
++            <id>add-jar</id>
++            <phase>package</phase>
++            <goals>
++              <goal>attach-artifact</goal>
++            </goals>
++            <configuration>
++              <artifacts>
++                <artifact>
++                  <file>${basedir}/../../../build/${project.artifactId}-${project.version}.jar</file>
++                  <type>jar</type>
++                </artifact>
++                <artifact>
++                  <file>${basedir}/../../../build/${project.artifactId}-test-${project.version}.jar</file>
++                  <type>jar</type>
++                  <classifier>tests</classifier>
++                </artifact>
++                <artifact>
++                  <file>${basedir}/target/${project.artifactId}-${project.version}-sources.jar</file>
++                  <type>jar</type>
++                  <classifier>sources</classifier>
++                </artifact>
++              </artifacts>
++            </configuration>
++          </execution>
++        </executions>
++      </plugin>
++      <plugin>
++        <groupId>org.apache.maven.plugins</groupId>
++        <artifactId>maven-antrun-plugin</artifactId>
++        <executions>
++          <execution>
++            <id>add-source-jar</id>
++            <phase>generate-sources</phase>
++            <goals>
++              <goal>run</goal>
++            </goals>
++            <configuration>
++              <target>
++                <mkdir dir="${basedir}/target" />
++                <jar destfile="${basedir}/target/${project.artifactId}-${project.version}-sources.jar">
++                  <fileset dir="${basedir}/../../../src">
++                    <include name="**/*" />
++                  </fileset>
++                </jar>
++              </target>
++            </configuration>
++          </execution>
++        </executions>
++      </plugin>
++    </plugins>
++  </build>
++  
++</project>
+diff --git a/cloudera/maven-packaging/templates/build.template b/cloudera/maven-packaging/templates/build.template
+new file mode 100644
+index 0000000..ae33ac3
+--- /dev/null
++++ b/cloudera/maven-packaging/templates/build.template
+@@ -0,0 +1,18 @@
++version=org.apache.sqoop:sqoop.version
++sqoop.version=org.apache.sqoop:sqoop.version
++reactor.repo=https://repository.cloudera.com/content/repositories/snapshots
++hadoop-core.cloudera.version=org.apache.hadoop:hadoop-core.version
++hadoop.version=org.apache.hadoop:hadoop-main.version
++
++hbase95.version=org.apache.hbase:hbase-common.version
++
++hcatalog.version=org.apache.hcatalog:hcatalog-core.version
++
++zookeeper.version=org.apache.zookeeper:zookeeper.version
++
++avro.version=org.apache.avro:avro.version
++
++# Default build profiles for CDH
++hadoopversion=200
++hbaseprofile=95
++
+diff --git a/cloudera/maven-packaging/templates/libraries.template b/cloudera/maven-packaging/templates/libraries.template
+new file mode 100644
+index 0000000..766a10d
+--- /dev/null
++++ b/cloudera/maven-packaging/templates/libraries.template
+@@ -0,0 +1,56 @@
++#   Licensed to Cloudera, Inc. under one or more
++#   contributor license agreements.  See the NOTICE file distributed with
++#   this work for additional information regarding copyright ownership.
++#   Cloudera, Inc. licenses this file to You under the Apache License, Version 2.0
++#   (the "License"); you may not use this file except in compliance with
++#   the License.  You may obtain a copy of the License at
++#
++#       http://www.apache.org/licenses/LICENSE-2.0
++#
++#   Unless required by applicable law or agreed to in writing, software
++#   distributed under the License is distributed on an "AS IS" BASIS,
++#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++#   See the License for the specific language governing permissions and
++#   limitations under the License.
++
++# This properties file lists the versions of the various artifacts we use.
++# It drives ivy and the generation of a maven POM
++
++# Default build profiles for CDH
++hadoopversion=200
++hbaseprofile=95
++
++#checkstyle.version=checkstyle:checkstyle.version
++checkstyle.version=5.0
++
++commons-cli.version=commons-cli:commons-cli.version
++commons-collections.version=commons-collections:commons-collections.version
++commons-io.version=commons-io:commons-io.version
++commons-lang.version=commons-lang:commons-lang.version
++commons-logging.version=commons-logging:commons-logging.version
++
++# Cloudera Distribution dependency version
++hadoop-core.cloudera.version=org.apache.hadoop:hadoop-core.version
++
++hbase95.version=org.apache.hbase:hbase-common.version
++
++hcatalog.version=org.apache.hcatalog:hcatalog.version
++
++zookeeper.version=org.apache.zookeeper:zookeeper.version
++
++hsqldb.version=hsqldb:hsqldb.version
++
++ivy.version=org.apache.ivy:ivy.version
++
++junit.version=junit:junit.version
++
++log4j.version=log4j:log4j.version
++
++mvn.version=2.0.10
++
++rats-lib.version=com.google.code.p.arat:rat-lib.version
++
++snappy.version=1.0.3.2
++
++avro.version=org.apache.avro:avro.version
++
+diff --git a/ivy.xml b/ivy.xml
+index abc12a1..3441810 100644
+--- a/ivy.xml
++++ b/ivy.xml
+@@ -63,6 +63,9 @@ under the License.
+     <conf name="hadoop200test" visibility="private" extends="test,hadoop200" />
+     <conf name="hadoop210test" visibility="private" extends="test,hadoop210" />
+ 
++    <conf name="hadoop23mr1test" visibility="private" extends="test,hadoop23" />
++    <conf name="hadoop20mr1test" visibility="private" extends="test,hadoop20" />
++    
+     <!-- We don't redistribute everything we depend on (e.g., Hadoop itself);
+          anything which Hadoop itself also depends on, we do not ship.
+          Things we actually need to ship are marked with a 'redist'
+@@ -157,9 +160,9 @@ under the License.
+ 
+     <!-- Dependencies for Hadoop 0.20 -->
+     <dependency org="org.apache.hadoop" name="hadoop-core"
+-      rev="${hadoop.version}" conf="hadoop20->default"/>
++      rev="${hadoop-core.cloudera.version}" conf="hadoop20->default; hadoop23mr1test->default"/>
+     <dependency org="org.apache.hadoop" name="hadoop-test"
+-      rev="${hadoop.version}" conf="hadoop20test->default"/>
++      rev="${hadoop-core.cloudera.version}" conf="hadoop20test->default; hadoop23mr1test->default"/>
+     <dependency org="org.aspectj" name="aspectjtools" rev="${aspectj.version}"
+       conf="hadoop20->default"/>
+     <dependency org="org.aspectj" name="aspectjrt" rev="${aspectj.version}"
+@@ -212,6 +215,8 @@ under the License.
+       <exclude org="com.sun.jersey" module="jersey-server"/>
+       <exclude org="org.apache.thrift" module="thrift"/>
+       <exclude org="log4j" module="log4j"/>
++      <exclude org="org.slf4j" module="slf4j-api"/>
++      <exclude org="org.slf4j" module="slf4j-log4j12"/>
+       <exclude org="org.apache.hadoop" module="hadoop-core" />
+       <exclude org="com.cloudera.cdh" module="zookeeper-ant" />
+     </dependency>
+diff --git a/ivy/ivysettings.xml b/ivy/ivysettings.xml
+index 2920c89..ea69862 100644
+--- a/ivy/ivysettings.xml
++++ b/ivy/ivysettings.xml
+@@ -40,7 +40,10 @@ under the License.
+       value="https://repository.cloudera.com/content/repositories/staging/"
+       override="false"/>
+   <property name="releases.cloudera.com"
+-      value="https://repository.cloudera.com/content/repositories/releases/"
++      value="https://repository.cloudera.com/artifactory/cdh-releases-rcs/"
++      override="false"/>
++  <property name="snapshots.cloudera.com"
++      value="https://repository.cloudera.com/artifactory/libs-snapshot-local/"
+       override="false"/>
+   <property name="www.datanucleus.org"
+       value="http://www.datanucleus.org/downloads/maven2/"
+@@ -53,6 +56,11 @@ under the License.
+   <settings defaultResolver="${resolvers}"/>
+ 
+   <resolvers>
++    <!-- CDH build repo, the pattern attribute handles SNAPSHOT artifacts -->
++    <ibiblio name="reactor-repo" root="${reactor.repo}"
++             m2compatible="true"
++             checkmodified="true"
++             pattern="[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]"/>
+     <ibiblio name="maven2" root="${repo.maven.org}"
+         pattern="${maven2.pattern.ext}" m2compatible="true"/>
+     <ibiblio name="datanucleus" root="${www.datanucleus.org}"
+@@ -61,7 +69,7 @@ under the License.
+         pattern="${maven2.pattern.ext}" m2compatible="true"/>
+     <ibiblio name="apache-snapshot" root="${snapshot.apache.org}"
+         m2compatible="true" checkmodified="true" changingPattern=".*SNAPSHOT"/>
+-    <ibiblio name="cloudera-staging" root="${staging.cloudera.com}"
++    <ibiblio name="cloudera-snapshot" root="${snapshots.cloudera.com}"
+         m2compatible="true" checkmodified="true" changingPattern=".*SNAPSHOT"/>
+ 
+     <filesystem name="fs" m2compatible="true">
+@@ -75,15 +83,19 @@ under the License.
+       <resolver ref="apache-snapshot"/>
+       <resolver ref="datanucleus"/>
+       <resolver ref="cloudera-releases"/>
+-      <resolver ref="cloudera-staging"/>
++      <resolver ref="reactor-repo"/>
++      <resolver ref="apache-snapshot"/>
++      <resolver ref="cloudera-releases"/>
++      <resolver ref="cloudera-snapshot"/>
+       <resolver ref="maven2"/>
+     </chain>
+ 
+     <chain name="internal" dual="true">
++      <resolver ref="reactor-repo"/>
+       <resolver ref="fs"/>
+       <resolver ref="apache-snapshot"/>
+       <resolver ref="datanucleus"/>
+-      <resolver ref="cloudera-staging"/>
++      <resolver ref="cloudera-releases"/>
+       <resolver ref="maven2"/>
+     </chain>
+ 
+-- 
+1.7.0.4
+

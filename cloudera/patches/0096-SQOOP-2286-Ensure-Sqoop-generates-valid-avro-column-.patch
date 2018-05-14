@@ -1,0 +1,116 @@
+From 08ff8838e0b89f6da79eeecb577f1ec77a24bdbe Mon Sep 17 00:00:00 2001
+From: Gwen Shapira <cshapi@gmail.com>
+Date: Tue, 7 Apr 2015 19:39:02 -0700
+Subject: [PATCH 096/101] SQOOP-2286: Ensure Sqoop generates valid avro column names
+
+(Abraham Elmahrek via Gwen Shapira)
+---
+ src/java/org/apache/sqoop/avro/AvroUtil.java       |   23 +++++++++++++++++++-
+ .../org/apache/sqoop/orm/AvroSchemaGenerator.java  |    3 +-
+ src/test/com/cloudera/sqoop/TestAvroImport.java    |   21 ++++++++++++++++++
+ 3 files changed, 45 insertions(+), 2 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/avro/AvroUtil.java b/src/java/org/apache/sqoop/avro/AvroUtil.java
+index 2fdf263..ee3cf62 100644
+--- a/src/java/org/apache/sqoop/avro/AvroUtil.java
++++ b/src/java/org/apache/sqoop/avro/AvroUtil.java
+@@ -24,6 +24,7 @@
+ import org.apache.hadoop.io.BytesWritable;
+ import org.apache.sqoop.lib.BlobRef;
+ import org.apache.sqoop.lib.ClobRef;
++import org.apache.sqoop.orm.ClassWriter;
+ 
+ import java.math.BigDecimal;
+ import java.nio.ByteBuffer;
+@@ -72,6 +73,25 @@ public static Object toAvro(Object o, boolean bigDecimalFormatString) {
+   }
+ 
+   /**
++   * Convert Column name into Avro column name.
++   */
++  public static String toAvroColumn(String column) {
++    return toAvroIdentifier(column);
++  }
++
++  /**
++   * Format candidate to avro specifics
++   */
++  public static String toAvroIdentifier(String candidate) {
++    String formattedCandidate = candidate.replaceAll("\\W+", "");
++    if (formattedCandidate.substring(0,1).matches("[a-zA-Z_]")) {
++      return formattedCandidate;
++    } else {
++      return "AVRO_" + formattedCandidate;
++    }
++  }
++
++  /**
+    * Manipulate a GenericRecord instance.
+    */
+   public static GenericRecord toGenericRecord(Map<String, Object> fieldMap,
+@@ -79,7 +99,8 @@ public static GenericRecord toGenericRecord(Map<String, Object> fieldMap,
+     GenericRecord record = new GenericData.Record(schema);
+     for (Map.Entry<String, Object> entry : fieldMap.entrySet()) {
+       Object avroObject = toAvro(entry.getValue(), bigDecimalFormatString);
+-      record.put(entry.getKey(), avroObject);
++      String avroColumn = toAvroColumn(entry.getKey());
++      record.put(avroColumn, avroObject);
+     }
+     return record;
+   }
+diff --git a/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java b/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java
+index 3c913a8..a73aa13 100644
+--- a/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java
++++ b/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java
+@@ -32,6 +32,7 @@
+ 
+ import com.cloudera.sqoop.SqoopOptions;
+ import com.cloudera.sqoop.manager.ConnManager;
++import org.apache.sqoop.avro.AvroUtil;
+ 
+ /**
+  * Creates an Avro schema to represent a table from a database.
+@@ -60,7 +61,7 @@ public Schema generate() throws IOException {
+ 
+     List<Field> fields = new ArrayList<Field>();
+     for (String columnName : columnNames) {
+-      String cleanedCol = ClassWriter.toJavaIdentifier(columnName);
++      String cleanedCol = AvroUtil.toAvroIdentifier(ClassWriter.toJavaIdentifier(columnName));
+       int sqlType = columnTypes.get(columnName);
+       Schema avroSchema = toAvroSchema(sqlType, columnName);
+       Field field = new Field(cleanedCol, avroSchema, null, null);
+diff --git a/src/test/com/cloudera/sqoop/TestAvroImport.java b/src/test/com/cloudera/sqoop/TestAvroImport.java
+index 440e76c..29f18db 100644
+--- a/src/test/com/cloudera/sqoop/TestAvroImport.java
++++ b/src/test/com/cloudera/sqoop/TestAvroImport.java
+@@ -205,6 +205,27 @@ public void testFirstUnderscoreInColumnName() throws IOException {
+     assertEquals("__NAME", 1987, record1.get("__NAME"));
+   }
+ 
++  public void testNonstandardCharactersInColumnName() throws IOException {
++    String [] names = { "avroå1" };
++    String [] types = { "INT" };
++    String [] vals = { "1987" };
++    createTableWithColTypesAndNames(names, types, vals);
++
++    runImport(getOutputArgv(true, null));
++
++    Path outputFile = new Path(getTablePath(), "part-m-00000.avro");
++    DataFileReader<GenericRecord> reader = read(outputFile);
++    Schema schema = reader.getSchema();
++    assertEquals(Schema.Type.RECORD, schema.getType());
++    List<Field> fields = schema.getFields();
++    assertEquals(types.length, fields.size());
++
++    checkField(fields.get(0), "AVRO1", Type.INT);
++
++    GenericRecord record1 = reader.next();
++    assertEquals("AVRO1", 1987, record1.get("AVRO1"));
++  }
++
+   private void checkField(Field field, String name, Type type) {
+     assertEquals(name, field.name());
+     assertEquals(Schema.Type.UNION, field.schema().getType());
+-- 
+1.7.0.4
+

@@ -1,0 +1,39 @@
+From f85dfea41130741165c1c06aa12c553f27c8bfcc Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Tue, 21 Oct 2014 16:04:22 -0700
+Subject: [PATCH 051/101] SQOOP-1472: Use Properties.load() method to load property files under conf/manager.d
+
+(Chiwan Park via Jarek Jarcec Cecho)
+---
+ src/java/org/apache/sqoop/ConnFactory.java |   15 +--------------
+ 1 files changed, 1 insertions(+), 14 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/ConnFactory.java b/src/java/org/apache/sqoop/ConnFactory.java
+index 335b037..3f77252 100644
+--- a/src/java/org/apache/sqoop/ConnFactory.java
++++ b/src/java/org/apache/sqoop/ConnFactory.java
+@@ -218,20 +218,7 @@ private void addManagersFromFile(Configuration conf, File f) {
+       // The file format is actually Java properties-file syntax.
+       r = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+       Properties props = new Properties();
+-      String line;
+-      while ((line = r.readLine()) != null) {
+-        if ("".equals(line.trim())) {
+-          continue;
+-        }
+-        int separator = line.indexOf('=');
+-        if (separator == -1) {
+-          throw new IOException("the content of connector file must be "
+-              + "in form of key=value");
+-        }
+-        String key = line.substring(0, separator).trim();
+-        String value = line.substring(separator + 1).trim();
+-        props.setProperty(key, value);
+-      }
++      props.load(r);
+ 
+       for (Map.Entry<Object, Object> entry : props.entrySet()) {
+         // Each key is a ManagerFactory class name.
+-- 
+1.7.0.4
+

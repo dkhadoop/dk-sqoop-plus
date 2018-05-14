@@ -1,0 +1,52 @@
+From 400072c59d34dd94cba231f162b59270cf73ed7d Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 4 Feb 2015 12:45:57 -0800
+Subject: [PATCH 077/101] SQOOP-2057: Skip delegation token generation flag during hbase import
+
+(Abraham Elmahrek via Jarek Jarcec Cecho)
+---
+ .../org/apache/sqoop/mapreduce/HBaseImportJob.java |   21 ++-----------------
+ 1 files changed, 3 insertions(+), 18 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java b/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
+index ac8758b..39c2765 100644
+--- a/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
+@@ -120,23 +120,8 @@ protected void configureOutputFormat(Job job, String tableName,
+     conf.set(HBasePutProcessor.ROW_KEY_COLUMN_KEY, rowKeyCol);
+   }
+ 
+-  /**
+-   * Hope for an existing authentication token.
+-   * Test with basic metadata operation.
+-   * Log exception if credentials exist, otherwise rethrow exception.
+-   */
+-  private boolean isAuthenticated(HBaseAdmin admin) {
+-    try {
+-      LOG.info("Checking for previous credentials by performing a metadata query.");
+-      admin.tableExists("TEST");
+-      LOG.info("Previous authentication credentials detected, so the job will use them.");
+-    } catch (IOException e) {
+-      LOG.info("No previous credentials found. Will attempt to authenticate.");
+-      LOG.debug("Exception found when performing metadata query to check credentials.", e);
+-      return false;
+-    }
+-
+-    return true;
++  protected boolean skipDelegationTokens(Configuration conf) {
++    return conf.getBoolean("sqoop.hbase.security.token.skip", false);
+   }
+ 
+   @Override
+@@ -177,7 +162,7 @@ protected void jobSetup(Job job) throws IOException, ImportException {
+ 
+     HBaseAdmin admin = new HBaseAdmin(conf);
+ 
+-    if (!isAuthenticated(admin)) {
++    if (!skipDelegationTokens(conf)) {
+       // Add authentication token to the job if we're running on secure cluster.
+       //
+       // We're currently supporting HBase version 0.90 that do not have security
+-- 
+1.7.0.4
+

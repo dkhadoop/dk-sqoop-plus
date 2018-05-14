@@ -1,0 +1,105 @@
+From 71ea6667d7f6b11b81b9fb66859248d92e82df60 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Tue, 16 Dec 2014 09:00:14 -0800
+Subject: [PATCH 069/101] SQOOP-1631: Drop confusing use of --clean-staging-table parameter from PGBulkloadManager
+
+(Masahiro Yamaguchi via Jarek Jarcec Cecho)
+---
+ src/docs/user/connectors.txt                       |   58 ++++++++++----------
+ .../mapreduce/postgresql/PGBulkloadExportJob.java  |    3 -
+ 2 files changed, 29 insertions(+), 32 deletions(-)
+
+diff --git a/src/docs/user/connectors.txt b/src/docs/user/connectors.txt
+index e59ef9e..fee40d9 100644
+--- a/src/docs/user/connectors.txt
++++ b/src/docs/user/connectors.txt
+@@ -294,8 +294,6 @@ Argument                                 Description
+ +\--table <table-name>+                  Table to populate
+ +\--input-null-string <null-string>+     The string to be interpreted as\
+                                          null for string columns
+-+\--clear-staging-table+                 Indicates that any data present in\
+-                                         the staging table can be deleted.
+ ---------------------------------------------------------------------------------
+ 
+ There are additional configuration for pg_bulkload execution
+@@ -306,34 +304,36 @@ it must preceed any export control arguments.
+ 
+ .Supported export control properties:
+ [grid="all"]
+-`-----------------------------`----------------------------------------------
+-Property                      Description
+------------------------------------------------------------------------------
+-mapred.reduce.tasks           Number of reduce tasks for staging. \
+-                              The defalt value is 1. \
+-                              Each tasks do staging in a single transaction.
+-pgbulkload.bin                Path of the pg_bulkoad binary \
+-                              installed on each slave nodes.
+-pgbulkload.check.constraints  Specify whether CHECK constraints are checked \
+-                              during the loading. \
+-                              The default value is YES.
+-pgbulkload.parse.errors       The maximum mumber of ingored records \
+-                              that cause errors during parsing, \
+-                              encoding, filtering, constraints checking, \
+-                              and data type conversion. \
+-                              Error records are recorded \
+-                              in the PARSE BADFILE.  \
+-                              The default value is INFINITE.
+-pgbulkload.duplicate.errors   Number of ingored records \
+-                              that violate unique constraints. \
+-                              Duplicated records are recorded in the \
+-                              DUPLICATE BADFILE on DB server. \
+-                              The default value is INFINITE.
+-pgbulkload.filter             Specify the filter function \
+-                              to convert each row in the input file.  \
+-                              See the pg_bulkload documentation to know \
+-                              how to write FILTER functions.
++`------------------------------`----------------------------------------------
++Property                       Description
+ -----------------------------------------------------------------------------
++mapred.reduce.tasks            Number of reduce tasks for staging. \
++                               The defalt value is 1. \
++                               Each tasks do staging in a single transaction.
++pgbulkload.bin                 Path of the pg_bulkoad binary \
++                               installed on each slave nodes.
++pgbulkload.check.constraints   Specify whether CHECK constraints are checked \
++                               during the loading. \
++                               The default value is YES.
++pgbulkload.parse.errors        The maximum mumber of ingored records \
++                               that cause errors during parsing, \
++                               encoding, filtering, constraints checking, \
++                               and data type conversion. \
++                               Error records are recorded \
++                               in the PARSE BADFILE.  \
++                               The default value is INFINITE.
++pgbulkload.duplicate.errors    Number of ingored records \
++                               that violate unique constraints. \
++                               Duplicated records are recorded in the \
++                               DUPLICATE BADFILE on DB server. \
++                               The default value is INFINITE.
++pgbulkload.filter              Specify the filter function \
++                               to convert each row in the input file.  \
++                               See the pg_bulkload documentation to know \
++                               how to write FILTER functions.
++pgbulkload.clear.staging.table Indicates that any data present in\
++                               the staging table can be dropped.
++------------------------------------------------------------------------------
+ 
+ Here is a example of complete command line.
+ ----
+diff --git a/src/java/org/apache/sqoop/mapreduce/postgresql/PGBulkloadExportJob.java b/src/java/org/apache/sqoop/mapreduce/postgresql/PGBulkloadExportJob.java
+index 2831f4b..c0c6039 100644
+--- a/src/java/org/apache/sqoop/mapreduce/postgresql/PGBulkloadExportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/postgresql/PGBulkloadExportJob.java
+@@ -138,9 +138,6 @@ protected void propagateOptionsToJob(Job job) {
+     conf.setBoolean("mapred.reduce.tasks.speculative.execution", false);
+     conf.setInt("mapred.map.max.attempts", 1);
+     conf.setInt("mapred.reduce.max.attempts", 1);
+-    if (context.getOptions().doClearStagingTable()) {
+-      conf.setBoolean("pgbulkload.clear.staging.table", true);
+-    }
+   }
+ 
+ 
+-- 
+1.7.0.4
+

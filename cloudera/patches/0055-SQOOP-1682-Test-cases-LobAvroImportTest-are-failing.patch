@@ -1,0 +1,184 @@
+From c5979b51bd1855c5cc6975163db37ea5e48c075a Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Wed, 5 Nov 2014 16:12:06 -0800
+Subject: [PATCH 055/101] SQOOP-1682: Test cases *LobAvroImportTest are failing
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ .../com/cloudera/sqoop/lib/LargeObjectLoader.java  |    4 ++--
+ .../org/apache/sqoop/lib/LargeObjectLoader.java    |    4 ++--
+ .../apache/sqoop/mapreduce/AvroImportMapper.java   |    2 +-
+ .../sqoop/mapreduce/HBaseBulkImportMapper.java     |    2 +-
+ .../sqoop/mapreduce/ParquetImportMapper.java       |    4 +++-
+ .../sqoop/mapreduce/SequenceFileImportMapper.java  |    2 +-
+ .../apache/sqoop/mapreduce/TextImportMapper.java   |    2 +-
+ .../mapreduce/hcat/SqoopHCatImportHelper.java      |    2 +-
+ .../cloudera/sqoop/lib/TestLargeObjectLoader.java  |    2 +-
+ .../sqoop/testutil/LobAvroImportTestCase.java      |   10 ++++++----
+ 10 files changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java b/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java
+index 8966579..b51cf0c 100644
+--- a/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java
++++ b/src/java/com/cloudera/sqoop/lib/LargeObjectLoader.java
+@@ -48,8 +48,8 @@
+    * Create a new LargeObjectLoader.
+    * @param conf the Configuration to use
+    */
+-  public LargeObjectLoader(Configuration conf)
++  public LargeObjectLoader(Configuration conf, Path workPath)
+       throws IOException {
+-    super(conf);
++    super(conf, workPath);
+   }
+ }
+diff --git a/src/java/org/apache/sqoop/lib/LargeObjectLoader.java b/src/java/org/apache/sqoop/lib/LargeObjectLoader.java
+index a0f94d2..99ad9e7 100644
+--- a/src/java/org/apache/sqoop/lib/LargeObjectLoader.java
++++ b/src/java/org/apache/sqoop/lib/LargeObjectLoader.java
+@@ -70,10 +70,10 @@
+    * Create a new LargeObjectLoader.
+    * @param conf the Configuration to use
+    */
+-  public LargeObjectLoader(Configuration conf)
++  public LargeObjectLoader(Configuration conf, Path workPath)
+       throws IOException {
+     this.conf = conf;
+-    this.workPath = new Path(System.getProperty("java.io.tmpdir"), "SQOOP");
++    this.workPath = workPath;
+     this.fs = FileSystem.get(conf);
+     this.curBlobWriter = null;
+     this.curClobWriter = null;
+diff --git a/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java b/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java
+index 1454ead..0ea5ca4 100644
+--- a/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/AvroImportMapper.java
+@@ -51,7 +51,7 @@ protected void setup(Context context)
+       throws IOException, InterruptedException {
+     Configuration conf = context.getConfiguration();
+     schema = AvroJob.getMapOutputSchema(conf);
+-    lobLoader = new LargeObjectLoader(conf);
++    lobLoader = new LargeObjectLoader(conf, FileOutputFormat.getWorkOutputPath(context));
+     bigDecimalFormatString = conf.getBoolean(
+         ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT,
+         ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT_DEFAULT);
+diff --git a/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java b/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java
+index 10891e9..363b5d7 100644
+--- a/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/HBaseBulkImportMapper.java
+@@ -54,7 +54,7 @@
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+     this.conf = context.getConfiguration();
+-    this.lobLoader = new LargeObjectLoader(this.conf);
++    this.lobLoader = new LargeObjectLoader(this.conf, new Path( this.conf.get("sqoop.hbase.lob.extern.dir", "/tmp/sqoop-hbase-" + context.getTaskAttemptID())));
+ 
+     // Get the implementation of PutTransformer to use.
+     // By default, we call toString() on every non-null field.
+diff --git a/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java b/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java
+index fb6af2c..45211fc 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/ParquetImportMapper.java
+@@ -24,8 +24,10 @@
+ import org.apache.avro.Schema;
+ import org.apache.avro.generic.GenericRecord;
+ import org.apache.hadoop.conf.Configuration;
++import org.apache.hadoop.fs.Path;
+ import org.apache.hadoop.io.LongWritable;
+ import org.apache.hadoop.io.NullWritable;
++import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+ import org.apache.sqoop.avro.AvroUtil;
+ 
+ import java.io.IOException;
+@@ -50,7 +52,7 @@ protected void setup(Context context)
+     bigDecimalFormatString = conf.getBoolean(
+         ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT,
+         ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT_DEFAULT);
+-    lobLoader = new LargeObjectLoader(conf);
++    lobLoader = new LargeObjectLoader(conf, new Path(conf.get("sqoop.kite.lob.extern.dir", "/tmp/sqoop-parquet-" + context.getTaskAttemptID())));
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java b/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java
+index fde5d66..96b523e 100644
+--- a/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/SequenceFileImportMapper.java
+@@ -38,7 +38,7 @@
+   @Override
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+-    this.lobLoader = new LargeObjectLoader(context.getConfiguration());
++    this.lobLoader = new LargeObjectLoader(context.getConfiguration(), FileOutputFormat.getWorkOutputPath(context));
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java b/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java
+index f0bca93..6f52907 100644
+--- a/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java
++++ b/src/java/org/apache/sqoop/mapreduce/TextImportMapper.java
+@@ -45,7 +45,7 @@ public TextImportMapper() {
+   @Override
+   protected void setup(Context context)
+       throws IOException, InterruptedException {
+-    this.lobLoader = new LargeObjectLoader(context.getConfiguration());
++    this.lobLoader = new LargeObjectLoader(context.getConfiguration(), FileOutputFormat.getWorkOutputPath(context));
+   }
+ 
+   @Override
+diff --git a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java
+index 598483d..878f765 100644
+--- a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java
++++ b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatImportHelper.java
+@@ -112,7 +112,7 @@ public SqoopHCatImportHelper(Configuration conf) throws IOException,
+       hCatFullTableSchema.append(hfs);
+     }
+     fieldCount = hCatFullTableSchema.size();
+-    lobLoader = new LargeObjectLoader(conf);
++    lobLoader = new LargeObjectLoader(conf, new Path(jobInfo.getTableInfo().getTableLocation()));
+     bigDecimalFormatString = conf.getBoolean(
+       ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT,
+       ImportJobBase.PROPERTY_BIGDECIMAL_FORMAT_DEFAULT);
+diff --git a/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java b/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java
+index c6bebf7..e0ca67c 100644
+--- a/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java
++++ b/src/test/com/cloudera/sqoop/lib/TestLargeObjectLoader.java
+@@ -56,7 +56,7 @@ public void setUp() throws IOException, InterruptedException {
+     }
+     fs.mkdirs(outDir);
+ 
+-    loader = new LargeObjectLoader(conf);
++    loader = new LargeObjectLoader(conf, outDir);
+   }
+ 
+   public void testReadClobRef()
+diff --git a/src/test/com/cloudera/sqoop/testutil/LobAvroImportTestCase.java b/src/test/com/cloudera/sqoop/testutil/LobAvroImportTestCase.java
+index 199c661..3843f67 100644
+--- a/src/test/com/cloudera/sqoop/testutil/LobAvroImportTestCase.java
++++ b/src/test/com/cloudera/sqoop/testutil/LobAvroImportTestCase.java
+@@ -207,8 +207,9 @@ public void testBlobAvroImportExternal() throws IOException, SQLException {
+     String expectedEnd = getTableNum() + "_m_0000000.lob,68,"
+       + data.length() + ")";
+ 
+-    assertTrue(returnVal.startsWith(expectedStart));
+-    assertTrue(returnVal.endsWith(expectedEnd));
++    assertNotNull(returnVal);
++    assertTrue("ExpectedStart: " + expectedStart + ", value: " + returnVal, returnVal.startsWith(expectedStart));
++    assertTrue("ExpectedEnd: " + expectedEnd + ", value: " + returnVal, returnVal.endsWith(expectedEnd));
+ 
+     // Verify that blob data stored in the external lob file is correct.
+     BlobRef br = BlobRef.parse(returnVal);
+@@ -295,8 +296,9 @@ public void testBlobCompressedAvroImportExternal()
+     String expectedEnd = getTableNum() + "_m_0000000.lob,68,"
+       + data.length() + ")";
+ 
+-    assertTrue(returnVal.startsWith(expectedStart));
+-    assertTrue(returnVal.endsWith(expectedEnd));
++    assertNotNull(returnVal);
++    assertTrue("ExpectedStart: " + expectedStart + ", value: " + returnVal, returnVal.startsWith(expectedStart));
++    assertTrue("ExpectedEnd: " + expectedEnd + ", value: " + returnVal, returnVal.endsWith(expectedEnd));
+ 
+     // Verify that blob data stored in the external lob file is correct.
+     BlobRef br = BlobRef.parse(returnVal);
+-- 
+1.7.0.4
+

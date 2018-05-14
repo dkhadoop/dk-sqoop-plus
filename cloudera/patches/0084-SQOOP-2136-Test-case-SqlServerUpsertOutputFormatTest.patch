@@ -1,0 +1,26 @@
+From 0c67458ca2813d3eea672c9a44eb617a17140323 Mon Sep 17 00:00:00 2001
+From: Venkat Ranganathan <venkat@hortonworks.com>
+Date: Wed, 25 Feb 2015 18:28:13 -0800
+Subject: [PATCH 084/101] SQOOP-2136: Test case SqlServerUpsertOutputFormatTest is failing
+   (Jarek Jarcec Cecho via Venkat Ranganathan)
+
+---
+ .../sqlserver/SqlServerUpsertOutputFormatTest.java |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java b/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java
+index 924c116..ec6eb5e 100644
+--- a/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java
++++ b/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java
+@@ -70,7 +70,7 @@ public void Merge_statement_is_parameterized_correctly() throws Exception {
+       + "_source.FirstColumn = _target.FirstColumn"
+       + "  WHEN MATCHED THEN UPDATE SET _target.SecondColumn = "
+       + "_source.SecondColumn, _target.ThirdColumn = _source.ThirdColumn"
+-      + "  WHEN NOT MATCHED THEN INSERT ( FirstColumn, SecondColumn, "
++      + "  WHEN NOT MATCHED THEN INSERT ( FirstColumn, SecondColumn,"
+       + " ThirdColumn ) VALUES "
+       + "( _source.FirstColumn, _source.SecondColumn, _source.ThirdColumn ) "
+       + "OPTION (NOLOCK);", recordWriter.getUpdateStatement());
+-- 
+1.7.0.4
+

@@ -1,0 +1,40 @@
+From 3101fedd143c75779669f7211b6d768c74791dfa Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Wed, 5 Nov 2014 14:04:40 -0800
+Subject: [PATCH 053/101] SQOOP-1617: MySQL fetch-size behavior changed with SQOOP-1400
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ .../org/apache/sqoop/manager/MySQLManager.java     |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/MySQLManager.java b/src/java/org/apache/sqoop/manager/MySQLManager.java
+index b9c9d36..e1d5a36 100644
+--- a/src/java/org/apache/sqoop/manager/MySQLManager.java
++++ b/src/java/org/apache/sqoop/manager/MySQLManager.java
+@@ -64,6 +64,22 @@ public MySQLManager(final SqoopOptions opts) {
+   }
+ 
+   @Override
++  protected void initOptionDefaults() {
++    if (options.getFetchSize() == null) {
++      LOG.info("Preparing to use a MySQL streaming resultset.");
++      options.setFetchSize(Integer.MIN_VALUE);
++    } else if (
++        !options.getFetchSize().equals(Integer.MIN_VALUE)
++        && !options.getFetchSize().equals(0)) {
++      LOG.info("Argument '--fetch-size " + options.getFetchSize()
++          + "' will probably get ignored by MySQL JDBC driver.");
++      // see also
++      // http://dev.mysql.com/doc/refman/5.5/en
++      //                       /connector-j-reference-implementation-notes.html
++    }
++  }
++
++  @Override
+   protected String getPrimaryKeyQuery(String tableName) {
+     return "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS "
+          + "WHERE TABLE_SCHEMA = (" + getSchemaQuery() + ") "
+-- 
+1.7.0.4
+

@@ -1,0 +1,33 @@
+From e26c9ff13d3adca99eaec3454dd5fbc2ddbc7b1d Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abe@apache.org>
+Date: Mon, 5 Jan 2015 17:02:20 -0800
+Subject: [PATCH 071/101] SQOOP-1970: Add warning about trailing whitespace characters when using password file to User guide
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ src/docs/user/connecting.txt |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/src/docs/user/connecting.txt b/src/docs/user/connecting.txt
+index fd812c0..6f31c60 100644
+--- a/src/docs/user/connecting.txt
++++ b/src/docs/user/connecting.txt
+@@ -60,6 +60,15 @@ $ sqoop import --connect jdbc:mysql://database.example.com/employees \
+     --username venkatesh --password-file ${user.home}/.password
+ ----
+ 
++WARNING: Sqoop will read entire content of the password file and use it as
++a password. This will include any trailing white space characters such as
++new line characters that are added by default by most of the text editors.
++You need to make sure that your password file contains only characters
++that belongs to your password. On the command line you can use command
+++echo+ with switch +-n+ to store password without any trailing white space
++characters. For example to store password +secret+ you would call
+++echo -n "secret" > password.file+.
++
+ Another way of supplying passwords is using the +-P+ argument which will
+ read a password from a console prompt.
+ 
+-- 
+1.7.0.4
+

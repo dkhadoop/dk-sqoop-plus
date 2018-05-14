@@ -1,0 +1,37 @@
+From 46360b0bf1128dca3bfd675137a34d41ebc830a5 Mon Sep 17 00:00:00 2001
+From: Andrew Bayer <andrew@cloudera.com>
+Date: Tue, 31 Mar 2015 09:01:57 -0700
+Subject: [PATCH 091/101] CLOUDERA-BUILD - simplifying ivy
+
+---
+ ivy/ivysettings.xml |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/ivy/ivysettings.xml b/ivy/ivysettings.xml
+index 9e3560d..3a7a94e 100644
+--- a/ivy/ivysettings.xml
++++ b/ivy/ivysettings.xml
+@@ -86,12 +86,9 @@ under the License.
+     <chain name="default" dual="true" checkmodified="true"
+         changingPattern=".*SNAPSHOT">
+       <resolver ref="fs"/>
+-      <resolver ref="apache-snapshot"/>
+       <resolver ref="datanucleus"/>
+       <resolver ref="cloudera-releases"/>
+       <resolver ref="reactor-repo"/>
+-      <resolver ref="apache-snapshot"/>
+-      <resolver ref="cloudera-releases"/>
+       <resolver ref="cloudera-snapshot"/>
+       <resolver ref="maven2"/>
+       <resolver ref="pentaho"/>
+@@ -102,7 +99,6 @@ under the License.
+     <chain name="internal" dual="true">
+       <resolver ref="reactor-repo"/>
+       <resolver ref="fs"/>
+-      <resolver ref="apache-snapshot"/>
+       <resolver ref="datanucleus"/>
+       <resolver ref="cloudera-releases"/>
+       <resolver ref="maven2"/>
+-- 
+1.7.0.4
+

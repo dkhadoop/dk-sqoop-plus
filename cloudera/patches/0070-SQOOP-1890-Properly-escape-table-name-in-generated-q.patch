@@ -1,0 +1,386 @@
+From a98910ee9948c6cd658e0b277a98324090d2e631 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abe@apache.org>
+Date: Wed, 17 Dec 2014 11:09:43 -0800
+Subject: [PATCH 070/101] SQOOP-1890: Properly escape table name in generated queries
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ .../org/apache/sqoop/manager/HsqldbManager.java    |    5 ++
+ src/java/org/apache/sqoop/tool/ImportTool.java     |    4 +-
+ .../com/cloudera/sqoop/TestIncrementalImport.java  |   51 ++++++++++++-------
+ src/test/com/cloudera/sqoop/TestMerge.java         |   18 ++-----
+ .../cloudera/sqoop/metastore/TestSavedJobs.java    |    2 +-
+ .../cloudera/sqoop/testutil/BaseSqoopTestCase.java |    8 +--
+ .../cloudera/sqoop/testutil/HsqldbTestServer.java  |   34 +++++--------
+ 7 files changed, 63 insertions(+), 59 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/HsqldbManager.java b/src/java/org/apache/sqoop/manager/HsqldbManager.java
+index 54a104d..fefac3f 100644
+--- a/src/java/org/apache/sqoop/manager/HsqldbManager.java
++++ b/src/java/org/apache/sqoop/manager/HsqldbManager.java
+@@ -61,6 +61,11 @@ public HsqldbManager(final SqoopOptions opts) {
+   }
+ 
+   @Override
++  public String escapeTableName(String tableName) {
++    return '"' + tableName + '"';
++  }
++
++  @Override
+   /**
+    * {@inheritDoc}
+    */
+diff --git a/src/java/org/apache/sqoop/tool/ImportTool.java b/src/java/org/apache/sqoop/tool/ImportTool.java
+index bdb23bb..d5bf1eb 100644
+--- a/src/java/org/apache/sqoop/tool/ImportTool.java
++++ b/src/java/org/apache/sqoop/tool/ImportTool.java
+@@ -200,12 +200,12 @@ private Object getMaxColumnId(SqoopOptions options) throws SQLException {
+     String query;
+ 
+     sb.append("SELECT MAX(");
+-    sb.append(manager.escapeTableName(options.getIncrementalTestColumn()));
++    sb.append(manager.escapeColName(options.getIncrementalTestColumn()));
+     sb.append(") FROM ");
+ 
+     if (options.getTableName() != null) {
+       // Table import
+-      sb.append(options.getTableName());
++      sb.append(manager.escapeTableName(options.getTableName()));
+ 
+       String where = options.getWhereClause();
+       if (null != where) {
+diff --git a/src/test/com/cloudera/sqoop/TestIncrementalImport.java b/src/test/com/cloudera/sqoop/TestIncrementalImport.java
+index b456ca6..a6680e8 100644
+--- a/src/test/com/cloudera/sqoop/TestIncrementalImport.java
++++ b/src/test/com/cloudera/sqoop/TestIncrementalImport.java
+@@ -93,7 +93,7 @@ private void assertRowCount(String table, int numRows) throws SQLException {
+     PreparedStatement s = null;
+     ResultSet rs = null;
+     try {
+-      s = c.prepareStatement("SELECT COUNT(*) FROM " + table);
++      s = c.prepareStatement("SELECT COUNT(*) FROM " + manager.escapeTableName(table));
+       rs = s.executeQuery();
+       if (!rs.next()) {
+         fail("No resultset");
+@@ -131,7 +131,7 @@ private void insertIdRows(String tableName, int low, int hi)
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("INSERT INTO " + tableName + " VALUES(?)");
++      s = c.prepareStatement("INSERT INTO " + manager.escapeTableName(tableName) + " VALUES(?)");
+       for (int i = low; i < hi; i++) {
+         s.setInt(1, i);
+         s.executeUpdate();
+@@ -139,7 +139,9 @@ private void insertIdRows(String tableName, int low, int hi)
+ 
+       c.commit();
+     } finally {
+-      s.close();
++      if(s != null) {
++        s.close();
++      }
+     }
+   }
+ 
+@@ -156,7 +158,7 @@ private void insertIdTimestampRows(String tableName, int low, int hi,
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("INSERT INTO " + tableName + " VALUES(?,?)");
++      s = c.prepareStatement("INSERT INTO " + manager.escapeTableName(tableName) + " VALUES(?,?)");
+       for (int i = low; i < hi; i++) {
+         s.setInt(1, i);
+         s.setTimestamp(2, ts);
+@@ -182,7 +184,7 @@ private void insertIdVarcharRows(String tableName, int low, int hi)
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("INSERT INTO " + tableName + " VALUES(?)");
++      s = c.prepareStatement("INSERT INTO " + manager.escapeTableName(tableName) + " VALUES(?)");
+       for (int i = low; i < hi; i++) {
+         s.setString(1, Integer.toString(i));
+         s.executeUpdate();
+@@ -204,7 +206,7 @@ private void createIdTable(String tableName, int insertRows)
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("CREATE TABLE " + tableName + "(id INT NOT NULL)");
++      s = c.prepareStatement("CREATE TABLE " + manager.escapeTableName(tableName) + "(id INT NOT NULL)");
+       s.executeUpdate();
+       c.commit();
+       insertIdRows(tableName, 0, insertRows);
+@@ -225,7 +227,7 @@ private void createTimestampTable(String tableName, int insertRows,
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("CREATE TABLE " + tableName + "(id INT NOT NULL, "
++      s = c.prepareStatement("CREATE TABLE " + manager.escapeTableName(tableName) + "(id INT NOT NULL, "
+           + "last_modified TIMESTAMP)");
+       s.executeUpdate();
+       c.commit();
+@@ -246,8 +248,7 @@ private void createIdVarcharTable(String tableName,
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("CREATE TABLE " + tableName
+-          + "(id varchar(20) NOT NULL)");
++      s = c.prepareStatement("CREATE TABLE " + manager.escapeTableName(tableName) + "(id varchar(20) NOT NULL)");
+       s.executeUpdate();
+       c.commit();
+       insertIdVarcharRows(tableName, 0, insertRows);
+@@ -719,7 +720,7 @@ public void testEmptyThenFullJobAppendWithQuery() throws Exception {
+     createIdTable(TABLE_NAME, 0);
+     clearDir(TABLE_NAME);
+ 
+-    final String QUERY = "SELECT id FROM withQuery WHERE $CONDITIONS";
++    final String QUERY = "SELECT id FROM \"withQuery\" WHERE $CONDITIONS";
+ 
+     List<String> args = getArgListForQuery(QUERY, TABLE_NAME,
+       false, true, false);
+@@ -945,8 +946,7 @@ public void testModifyWithTimestamp() throws Exception {
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("UPDATE " + TABLE_NAME
+-          + " SET id=?, last_modified=? WHERE id=?");
++      s = c.prepareStatement("UPDATE " + manager.escapeTableName(TABLE_NAME) + " SET id=?, last_modified=? WHERE id=?");
+       s.setInt(1, 4000); // the first row should have '4000' in it now.
+       s.setTimestamp(2, new Timestamp(rowsAddedTime));
+       s.setInt(3, 0);
+@@ -991,8 +991,7 @@ public void testUpdateModifyWithTimestamp() throws Exception {
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("UPDATE " + TABLE_NAME
+-          + " SET id=?, last_modified=? WHERE id=?");
++      s = c.prepareStatement("UPDATE " + manager.escapeTableName(TABLE_NAME) + " SET id=?, last_modified=? WHERE id=?");
+       s.setInt(1, 4000); // the first row should have '4000' in it now.
+       s.setTimestamp(2, new Timestamp(rowsAddedTime));
+       s.setInt(3, 0);
+@@ -1022,7 +1021,7 @@ public void testUpdateModifyWithTimestampWithQuery() throws Exception {
+     Timestamp thePast = new Timestamp(System.currentTimeMillis() - 100);
+     createTimestampTable(TABLE_NAME, 10, thePast);
+ 
+-    final String QUERY = "SELECT id, last_modified FROM UpdateModifyWithTimestampWithQuery WHERE $CONDITIONS";
++    final String QUERY = "SELECT id, last_modified FROM \"UpdateModifyWithTimestampWithQuery\" WHERE $CONDITIONS";
+ 
+     List<String> args = getArgListForQuery(QUERY, TABLE_NAME,
+         true, false, false);
+@@ -1045,8 +1044,7 @@ public void testUpdateModifyWithTimestampWithQuery() throws Exception {
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("UPDATE " + TABLE_NAME
+-          + " SET id=?, last_modified=? WHERE id=?");
++      s = c.prepareStatement("UPDATE " + manager.escapeTableName(TABLE_NAME) + " SET id=?, last_modified=? WHERE id=?");
+       s.setInt(1, 4000); // the first row should have '4000' in it now.
+       s.setTimestamp(2, new Timestamp(rowsAddedTime));
+       s.setInt(3, 0);
+@@ -1096,8 +1094,7 @@ public void testUpdateModifyWithTimestampJob() throws Exception {
+     Connection c = manager.getConnection();
+     PreparedStatement s = null;
+     try {
+-      s = c.prepareStatement("UPDATE " + TABLE_NAME
+-          + " SET id=?, last_modified=? WHERE id=?");
++      s = c.prepareStatement("UPDATE " + manager.escapeTableName(TABLE_NAME) + " SET id=?, last_modified=? WHERE id=?");
+       s.setInt(1, 4000); // the first row should have '4000' in it now.
+       s.setTimestamp(2, new Timestamp(rowsAddedTime));
+       s.setInt(3, 0);
+@@ -1219,5 +1216,21 @@ public void testIncrementalAppendTimestamp() throws Exception {
+     runJob(TABLE_NAME);
+     assertDirOfNumbers(TABLE_NAME, 20);
+   }
++
++  // SQOOP-1890
++  public void testTableNameWithSpecialCharacters() throws Exception {
++    // Table name with special characters to verify proper table name escaping
++    final String TABLE_NAME = "my-table.ext";
++    createIdTable(TABLE_NAME, 0);
++
++    // Now add some rows.
++    insertIdRows(TABLE_NAME, 0, 10);
++
++    List<String> args = getArgListForTable(TABLE_NAME, false, true);
++    createJob("emptyJob", args);
++    runJob("emptyJob");
++    assertDirOfNumbers(TABLE_NAME, 10);
++  }
++
+ }
+ 
+diff --git a/src/test/com/cloudera/sqoop/TestMerge.java b/src/test/com/cloudera/sqoop/TestMerge.java
+index cc1a3a9..3821aa1 100644
+--- a/src/test/com/cloudera/sqoop/TestMerge.java
++++ b/src/test/com/cloudera/sqoop/TestMerge.java
+@@ -92,32 +92,28 @@ public SqoopOptions getSqoopOptions(Configuration conf) {
+   }
+ 
+   protected void createTable() throws SQLException {
+-    PreparedStatement s = conn.prepareStatement("DROP TABLE " + TABLE_NAME
+-        + " IF EXISTS");
++    PreparedStatement s = conn.prepareStatement("DROP TABLE \"" + TABLE_NAME + "\" IF EXISTS");
+     try {
+       s.executeUpdate();
+     } finally {
+       s.close();
+     }
+ 
+-    s = conn.prepareStatement("CREATE TABLE " + TABLE_NAME
+-        + " (id INT NOT NULL PRIMARY KEY, val INT, lastmod TIMESTAMP)");
++    s = conn.prepareStatement("CREATE TABLE \"" + TABLE_NAME + "\" (id INT NOT NULL PRIMARY KEY, val INT, lastmod TIMESTAMP)");
+     try {
+       s.executeUpdate();
+     } finally {
+       s.close();
+     }
+ 
+-    s = conn.prepareStatement("INSERT INTO " + TABLE_NAME + " VALUES ("
+-        + "0, 0, NOW())");
++    s = conn.prepareStatement("INSERT INTO \"" + TABLE_NAME + "\" VALUES (0, 0, NOW())");
+     try {
+       s.executeUpdate();
+     } finally {
+       s.close();
+     }
+ 
+-    s = conn.prepareStatement("INSERT INTO " + TABLE_NAME + " VALUES ("
+-        + "1, 42, NOW())");
++    s = conn.prepareStatement("INSERT INTO \"" + TABLE_NAME + "\" VALUES (1, 42, NOW())");
+     try {
+       s.executeUpdate();
+     } finally {
+@@ -178,8 +174,7 @@ public void testMerge() throws Exception {
+     Thread.sleep(25);
+ 
+     // Modify the data in the warehouse.
+-    PreparedStatement s = conn.prepareStatement("UPDATE " + TABLE_NAME
+-        + " SET val=43, lastmod=NOW() WHERE id=1");
++    PreparedStatement s = conn.prepareStatement("UPDATE \"" + TABLE_NAME + "\" SET val=43, lastmod=NOW() WHERE id=1");
+     try {
+       s.executeUpdate();
+       conn.commit();
+@@ -187,8 +182,7 @@ public void testMerge() throws Exception {
+       s.close();
+     }
+ 
+-    s = conn.prepareStatement("INSERT INTO " + TABLE_NAME + " VALUES ("
+-        + "3,313,NOW())");
++    s = conn.prepareStatement("INSERT INTO \"" + TABLE_NAME + "\" VALUES (3,313,NOW())");
+     try {
+       s.executeUpdate();
+       conn.commit();
+diff --git a/src/test/com/cloudera/sqoop/metastore/TestSavedJobs.java b/src/test/com/cloudera/sqoop/metastore/TestSavedJobs.java
+index 9f36f63..d100c2c 100644
+--- a/src/test/com/cloudera/sqoop/metastore/TestSavedJobs.java
++++ b/src/test/com/cloudera/sqoop/metastore/TestSavedJobs.java
+@@ -76,7 +76,7 @@ public static void resetSchema(SqoopOptions options) throws SQLException {
+     try {
+       String [] tables = manager.listTables();
+       for (String table : tables) {
+-        s.executeUpdate("DROP TABLE " + table);
++        s.executeUpdate("DROP TABLE " + manager.escapeTableName(table));
+       }
+ 
+       c.commit();
+diff --git a/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java b/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java
+index a94ab90..cc5cbd7 100644
+--- a/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java
++++ b/src/test/com/cloudera/sqoop/testutil/BaseSqoopTestCase.java
+@@ -281,7 +281,7 @@ protected String getColName(int i) {
+   protected void dropTableIfExists(String table) throws SQLException {
+     Connection conn = getManager().getConnection();
+     PreparedStatement statement = conn.prepareStatement(
+-        "DROP TABLE " + table + " IF EXISTS",
++        "DROP TABLE \"" + table + "\" IF EXISTS",
+         ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+     try {
+       statement.executeUpdate();
+@@ -322,8 +322,7 @@ protected void createTableWithColTypesAndNames(String[] colNames,
+           }
+         }
+ 
+-        createTableStr = "CREATE TABLE " + getTableName()
+-            + "(" + columnDefStr + ")";
++        createTableStr = "CREATE TABLE \"" + getTableName() + "\"(" + columnDefStr + ")";
+         LOG.info("Creating table: " + createTableStr);
+         statement = conn.prepareStatement(
+             createTableStr,
+@@ -357,8 +356,7 @@ protected void createTableWithColTypesAndNames(String[] colNames,
+           }
+         }
+         try {
+-          String insertValsStr = "INSERT INTO " + getTableName()
+-              + "(" + columnListStr + ")"
++          String insertValsStr = "INSERT INTO \"" + getTableName() + "\"(" + columnListStr + ")"
+               + " VALUES(" + valueListStr + ")";
+           LOG.info("Inserting values: " + insertValsStr);
+           statement = conn.prepareStatement(
+diff --git a/src/test/com/cloudera/sqoop/testutil/HsqldbTestServer.java b/src/test/com/cloudera/sqoop/testutil/HsqldbTestServer.java
+index 4b70e5a..8d0a30d 100644
+--- a/src/test/com/cloudera/sqoop/testutil/HsqldbTestServer.java
++++ b/src/test/com/cloudera/sqoop/testutil/HsqldbTestServer.java
+@@ -147,9 +147,8 @@ public void createSchema() throws SQLException {
+       connection = getConnection();
+ 
+       st = connection.createStatement();
+-      st.executeUpdate("DROP TABLE " + DUMMY_TABLE_NAME + " IF EXISTS");
+-      st.executeUpdate("CREATE TABLE " + DUMMY_TABLE_NAME
+-          + "(intField1 INT, intField2 INT)");
++      st.executeUpdate("DROP TABLE \"" + DUMMY_TABLE_NAME + "\" IF EXISTS");
++      st.executeUpdate("CREATE TABLE \"" + DUMMY_TABLE_NAME + "\"(intField1 INT, intField2 INT)");
+ 
+       connection.commit();
+     } finally {
+@@ -182,10 +181,10 @@ public void populateData() throws SQLException {
+       connection = getConnection();
+ 
+       st = connection.createStatement();
+-      st.executeUpdate("INSERT INTO " + DUMMY_TABLE_NAME + " VALUES(1, 8)");
+-      st.executeUpdate("INSERT INTO " + DUMMY_TABLE_NAME + " VALUES(3, 6)");
+-      st.executeUpdate("INSERT INTO " + DUMMY_TABLE_NAME + " VALUES(5, 4)");
+-      st.executeUpdate("INSERT INTO " + DUMMY_TABLE_NAME + " VALUES(7, 2)");
++      st.executeUpdate("INSERT INTO \"" + DUMMY_TABLE_NAME + "\" VALUES(1, 8)");
++      st.executeUpdate("INSERT INTO \"" + DUMMY_TABLE_NAME + "\" VALUES(3, 6)");
++      st.executeUpdate("INSERT INTO \"" + DUMMY_TABLE_NAME + "\" VALUES(5, 4)");
++      st.executeUpdate("INSERT INTO \"" + DUMMY_TABLE_NAME + "\" VALUES(7, 2)");
+ 
+       connection.commit();
+     } finally {
+@@ -209,18 +208,13 @@ public void createEmployeeDemo() throws SQLException, ClassNotFoundException {
+       connection = getConnection();
+ 
+       st = connection.createStatement();
+-      st.executeUpdate("DROP TABLE " + EMPLOYEE_TABLE_NAME + " IF EXISTS");
+-      st.executeUpdate("CREATE TABLE " + EMPLOYEE_TABLE_NAME
+-          + "(emp_id INT NOT NULL PRIMARY KEY, name VARCHAR(64))");
+-
+-      st.executeUpdate("INSERT INTO " + EMPLOYEE_TABLE_NAME
+-          + " VALUES(1, 'Aaron')");
+-      st.executeUpdate("INSERT INTO " + EMPLOYEE_TABLE_NAME
+-          + " VALUES(2, 'Joe')");
+-      st.executeUpdate("INSERT INTO " + EMPLOYEE_TABLE_NAME
+-          + " VALUES(3, 'Jim')");
+-      st.executeUpdate("INSERT INTO " + EMPLOYEE_TABLE_NAME
+-          + " VALUES(4, 'Lisa')");
++      st.executeUpdate("DROP TABLE \"" + EMPLOYEE_TABLE_NAME + "\" IF EXISTS");
++      st.executeUpdate("CREATE TABLE \"" + EMPLOYEE_TABLE_NAME + "\"(emp_id INT NOT NULL PRIMARY KEY, name VARCHAR(64))");
++
++      st.executeUpdate("INSERT INTO \"" + EMPLOYEE_TABLE_NAME + "\" VALUES(1, 'Aaron')");
++      st.executeUpdate("INSERT INTO \"" + EMPLOYEE_TABLE_NAME + "\" VALUES(2, 'Joe')");
++      st.executeUpdate("INSERT INTO \"" + EMPLOYEE_TABLE_NAME + "\" VALUES(3, 'Jim')");
++      st.executeUpdate("INSERT INTO \"" + EMPLOYEE_TABLE_NAME + "\" VALUES(4, 'Lisa')");
+ 
+       connection.commit();
+     } finally {
+@@ -245,7 +239,7 @@ public void dropExistingSchema() throws SQLException {
+       for (String table : tables) {
+         Statement s = conn.createStatement();
+         try {
+-          s.executeUpdate("DROP TABLE " + table);
++          s.executeUpdate("DROP TABLE \"" + table + "\"");
+           conn.commit();
+         } finally {
+           s.close();
+-- 
+1.7.0.4
+

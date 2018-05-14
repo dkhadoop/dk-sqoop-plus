@@ -1,0 +1,41 @@
+From bd3ba85b442884e5771da234e2dbdaa26c243a90 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abe@apache.org>
+Date: Sun, 18 Jan 2015 21:08:06 -0800
+Subject: [PATCH 073/101] SQOOP-2017: Print out loaded columns and their type in verbose mode
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ src/java/org/apache/sqoop/manager/SqlManager.java |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/SqlManager.java b/src/java/org/apache/sqoop/manager/SqlManager.java
+index 5be82e3..c81f170 100644
+--- a/src/java/org/apache/sqoop/manager/SqlManager.java
++++ b/src/java/org/apache/sqoop/manager/SqlManager.java
+@@ -150,6 +150,7 @@ protected String getColNamesQuery(String tableName) {
+           }
+         }
+         columns.add(colName);
++        LOG.debug("Found column " + colName);
+       }
+       return columns.toArray(new String[0]);
+     } catch (SQLException sqlException) {
+@@ -300,6 +301,7 @@ protected String getColTypesQuery(String tableName) {
+         info.add(precision);
+         info.add(scale);
+         colInfo.put(colName, info);
++        LOG.debug("Found column " + colName + " of type " + info);
+       }
+ 
+       return colInfo;
+@@ -358,6 +360,7 @@ protected String getColTypesQuery(String tableName) {
+         }
+ 
+         colTypeNames.put(colName, colTypeName);
++        LOG.debug("Found column " + colName + " of type " + colTypeName);
+       }
+ 
+       return colTypeNames;
+-- 
+1.7.0.4
+

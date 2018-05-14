@@ -1,0 +1,37 @@
+From 23fb75114ea1458bfbcc0861492567ea9c7d1ace Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Sun, 8 Feb 2015 08:27:43 -0800
+Subject: [PATCH 076/101] CLOUDERA-BUILD. Adding repositories for calcite dependencies
+
+CDH-24952: Sqoop packaging build is failing
+---
+ ivy/ivysettings.xml |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/ivy/ivysettings.xml b/ivy/ivysettings.xml
+index ea69862..664c0ab 100644
+--- a/ivy/ivysettings.xml
++++ b/ivy/ivysettings.xml
+@@ -71,6 +71,10 @@ under the License.
+         m2compatible="true" checkmodified="true" changingPattern=".*SNAPSHOT"/>
+     <ibiblio name="cloudera-snapshot" root="${snapshots.cloudera.com}"
+         m2compatible="true" checkmodified="true" changingPattern=".*SNAPSHOT"/>
++    <ibiblio name="pentaho" root="http://repository.pentaho.org/artifactory/repo/"
++        pattern="${maven2.pattern.ext}" m2compatible="true"/>
++    <ibiblio name="springsource" root="http://repo.springsource.org/libs-release-remote/"
++        pattern="${maven2.pattern.ext}" m2compatible="true"/>
+ 
+     <filesystem name="fs" m2compatible="true">
+        <artifact pattern="${repo.dir}/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"/>
+@@ -88,6 +92,8 @@ under the License.
+       <resolver ref="cloudera-releases"/>
+       <resolver ref="cloudera-snapshot"/>
+       <resolver ref="maven2"/>
++      <resolver ref="pentaho"/>
++      <resolver ref="springsource"/>
+     </chain>
+ 
+     <chain name="internal" dual="true">
+-- 
+1.7.0.4
+

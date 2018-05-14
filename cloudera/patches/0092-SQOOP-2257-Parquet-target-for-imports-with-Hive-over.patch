@@ -1,0 +1,45 @@
+From 0532d163f5cfa6dcd1c95101ef59cc5115ebf121 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Tue, 24 Mar 2015 06:43:30 -0700
+Subject: [PATCH 092/101] SQOOP-2257: Parquet target for imports with Hive overwrite option does not work
+
+(Qian Xu via Jarek Jarcec Cecho)
+---
+ .../sqoop/mapreduce/DataDrivenImportJob.java       |    4 +++-
+ .../org/apache/sqoop/mapreduce/ParquetJob.java     |    4 ++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+index 708da5b..bcf6611 100644
+--- a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+@@ -103,7 +103,9 @@ protected void configureMapper(Job job, String tableName,
+       // Parquet data records. The import will fail, if schema is invalid.
+       Schema schema = generateAvroSchema(tableName);
+       String uri = getKiteUri(conf, tableName);
+-      ParquetJob.configureImportJob(conf, schema, uri, options.isAppendMode());
++      boolean reuseExistingDataset = options.isAppendMode() ||
++          (options.doHiveImport() && options.doOverwriteHiveTable());
++      ParquetJob.configureImportJob(conf, schema, uri, reuseExistingDataset);
+     }
+ 
+     job.setMapperClass(getMapperClass());
+diff --git a/src/java/org/apache/sqoop/mapreduce/ParquetJob.java b/src/java/org/apache/sqoop/mapreduce/ParquetJob.java
+index bea74c3..85d88ff 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ParquetJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/ParquetJob.java
+@@ -71,9 +71,9 @@ public static CompressionType getCompressionType(Configuration conf) {
+    * {@link org.apache.avro.generic.GenericRecord}.
+    */
+   public static void configureImportJob(Configuration conf, Schema schema,
+-      String uri, boolean doAppend) throws IOException {
++      String uri, boolean reuseExistingDataset) throws IOException {
+     Dataset dataset;
+-    if (doAppend) {
++    if (reuseExistingDataset) {
+       try {
+         dataset = Datasets.load(uri);
+       } catch (DatasetNotFoundException ex) {
+-- 
+1.7.0.4
+

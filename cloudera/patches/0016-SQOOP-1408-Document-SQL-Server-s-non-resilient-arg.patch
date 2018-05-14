@@ -1,0 +1,42 @@
+From d05d9106931d365e61013a8ea68ec0812041597b Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 30 Jul 2014 09:45:18 -0700
+Subject: [PATCH 016/101] SQOOP-1408: Document SQL Server's --non-resilient arg
+
+(Keegan Witt via Jarek Jarcec Cecho)
+---
+ src/docs/user/connectors.txt |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/src/docs/user/connectors.txt b/src/docs/user/connectors.txt
+index 062201d..bba946a 100644
+--- a/src/docs/user/connectors.txt
++++ b/src/docs/user/connectors.txt
+@@ -125,12 +125,24 @@ List of all extra arguments supported by Microsoft SQL Connector is shown below:
+ `----------------------------------------`---------------------------------------
+ Argument                                 Description
+ ---------------------------------------------------------------------------------
+++\--non-resilient+                       Don't attempt to recover failed \
++                                         export operations.
+ +\--schema <name>+                       Scheme name that sqoop should use. \
+                                          Default is "dbo".
+ +\--table-hints <hints>+                 Table hints that Sqoop should use for \
+                                          data movement.
+ ---------------------------------------------------------------------------------
+ 
++Non-resilient operations
++^^^^^^^^^^^^^^^^^^^^^^^^
++
++You can override the default and not use resilient operations during export.
++This will avoid retrying failed operations. For example:
++
++----
++$ sqoop export ... --export-dir custom_dir --table custom_table -- --non-resilient
++----
++
+ Schema support
+ ^^^^^^^^^^^^^^
+ 
+-- 
+1.7.0.4
+

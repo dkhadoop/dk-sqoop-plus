@@ -1,0 +1,22 @@
+From 20e5b571dfdf0e09b028a31c93696cdc36aff3ad Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 25 Feb 2015 17:14:41 -0800
+Subject: [PATCH 081/101] CLOUDERA-BUILD. Moving Accumulo to 1.6.2
+
+---
+ cloudera/maven-packaging/templates/build.template |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/cloudera/maven-packaging/templates/build.template b/cloudera/maven-packaging/templates/build.template
+index ae3b2bd..e29ece9 100644
+--- a/cloudera/maven-packaging/templates/build.template
++++ b/cloudera/maven-packaging/templates/build.template
+@@ -18,3 +18,5 @@ kite-data.version=org.kitesdk:kite-data-core.version
+ hadoopversion=200
+ hbaseprofile=95
+ 
++# CDH5 is no longer compatible with accumulo 1.5's test mini cluster
++accumulo.version=1.6.2
+-- 
+1.7.0.4
+

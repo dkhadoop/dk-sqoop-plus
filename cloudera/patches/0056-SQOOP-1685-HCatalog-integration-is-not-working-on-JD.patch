@@ -1,0 +1,45 @@
+From aca10d63d72df03ace6c982ee2befdaf3b80ad3a Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Wed, 5 Nov 2014 20:17:05 -0800
+Subject: [PATCH 056/101] SQOOP-1685: HCatalog integration is not working on JDK8
+
+(Jarek Jarcec Cecho via Abraham Elmahrek)
+---
+ .../sqoop/mapreduce/hcat/SqoopHCatUtilities.java   |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java
+index 599548d..ee25d0e 100644
+--- a/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java
++++ b/src/java/org/apache/sqoop/mapreduce/hcat/SqoopHCatUtilities.java
+@@ -179,6 +179,13 @@ public V put(String key, V value) {
+     public V get(Object key) {
+       return super.get(((String) key).toLowerCase());
+     }
++
++    @Override
++    public void putAll(Map<? extends String, ? extends V> map) {
++      for(Map.Entry<? extends String, ? extends V> entry: map.entrySet()) {
++        put(entry.getKey(), entry.getValue());
++      }
++    }
+   }
+ 
+   /**
+@@ -198,6 +205,13 @@ public V put(String key, V value) {
+     public V get(Object key) {
+       return super.get(((String) key).toUpperCase());
+     }
++
++    @Override
++    public void putAll(Map<? extends String, ? extends V> map) {
++      for(Map.Entry<? extends String, ? extends V> entry: map.entrySet()) {
++        put(entry.getKey(), entry.getValue());
++      }
++    }
+   }
+ 
+   /**
+-- 
+1.7.0.4
+

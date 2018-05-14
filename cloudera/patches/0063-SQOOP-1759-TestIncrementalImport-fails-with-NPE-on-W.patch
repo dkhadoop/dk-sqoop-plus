@@ -1,0 +1,26 @@
+From 30b90414ab9f9887c3a5be2ceb526a7ead652f67 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 19 Nov 2014 09:18:58 -0800
+Subject: [PATCH 063/101] SQOOP-1759: TestIncrementalImport fails with NPE on Windows
+
+(Venkat Ranganathan via Jarek Jarcec Cecho)
+---
+ .../com/cloudera/sqoop/TestIncrementalImport.java  |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/src/test/com/cloudera/sqoop/TestIncrementalImport.java b/src/test/com/cloudera/sqoop/TestIncrementalImport.java
+index fd94552..b456ca6 100644
+--- a/src/test/com/cloudera/sqoop/TestIncrementalImport.java
++++ b/src/test/com/cloudera/sqoop/TestIncrementalImport.java
+@@ -547,6 +547,8 @@ public void runImport(SqoopOptions options, List<String> args) {
+     args.add(SOURCE_DB_URL);
+     args.add("--query");
+     args.add(query);
++    args.add("--class-name");
++    args.add(directoryName);
+     args.add("--target-dir");
+     args.add(BaseSqoopTestCase.LOCAL_WAREHOUSE_DIR
+       + System.getProperty("file.separator") + directoryName);
+-- 
+1.7.0.4
+

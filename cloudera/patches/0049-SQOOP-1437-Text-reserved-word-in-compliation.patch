@@ -1,0 +1,28 @@
+From 72f1e2a59374c175434aaa74488163b2971baa4f Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 6 Oct 2014 18:04:25 -0700
+Subject: [PATCH 049/101] SQOOP-1437: 'Text' reserved word in compliation
+
+(Nick White via Jarek Jarcec Cecho)
+---
+ src/java/org/apache/sqoop/orm/ClassWriter.java |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/orm/ClassWriter.java b/src/java/org/apache/sqoop/orm/ClassWriter.java
+index 94ff576..1c6f7f4 100644
+--- a/src/java/org/apache/sqoop/orm/ClassWriter.java
++++ b/src/java/org/apache/sqoop/orm/ClassWriter.java
+@@ -116,6 +116,10 @@
+     JAVA_RESERVED_WORDS.add("void");
+     JAVA_RESERVED_WORDS.add("volatile");
+     JAVA_RESERVED_WORDS.add("while");
++
++    // not strictly reserved words, but collides with
++    // our imports
++    JAVA_RESERVED_WORDS.add("Text");
+   }
+ 
+   public static final String PROPERTY_CODEGEN_METHODS_MAXCOLS =
+-- 
+1.7.0.4
+

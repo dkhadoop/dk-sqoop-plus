@@ -1,0 +1,28 @@
+From e60671c85c4c045d9bcdff491da19ff4c0b9bec5 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 18 Feb 2015 07:44:03 -0800
+Subject: [PATCH 078/101] CLOUDERA-BUILD. Switching source/target to JDK7.
+
+CDH-25311: Sqoop - Build all C5 components with -source/-target 1.7
+---
+ build.xml |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index 17afba1..b7ee3e4 100644
+--- a/build.xml
++++ b/build.xml
+@@ -295,8 +295,8 @@
+   <property name="src.tar.file" location="${build.dir}/${src.artifact.name}.tar.gz" />
+ 
+   <!-- compilation -->
+-  <property name="targetJavaVersion" value="1.6" />
+-  <property name="sourceJavaVersion" value="1.6" />
++  <property name="targetJavaVersion" value="1.7" />
++  <property name="sourceJavaVersion" value="1.7" />
+   <property name="javac.deprecation" value="off"/>
+   <property name="javac.debug" value="on"/>
+   <property name="build.encoding" value="ISO-8859-1"/>
+-- 
+1.7.0.4
+

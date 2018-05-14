@@ -1,0 +1,194 @@
+From 845a09d145479db40690e1e4cfe490825af1fe42 Mon Sep 17 00:00:00 2001
+From: Abraham Elmahrek <abraham@elmahrek.com>
+Date: Wed, 26 Nov 2014 14:40:44 -0800
+Subject: [PATCH 068/101] SQOOP-1627: Fix Hadoop100  and Hadoop20 profile
+
+(Venkat Ranganathan via Abraham Elmahrek)
+---
+ build.xml                                          |    8 +-
+ .../org/apache/sqoop/mapreduce/HBaseImportJob.java |   21 ++++++-
+ .../TestMainframeDatasetFTPRecordReader.java       |    2 +-
+ .../mainframe/TestMainframeDatasetInputFormat.java |    2 +-
+ .../sqlserver/SqlServerUpsertOutputFormatTest.java |   60 +++++++++++++++----
+ 5 files changed, 71 insertions(+), 22 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index e8e1de9..17afba1 100644
+--- a/build.xml
++++ b/build.xml
+@@ -145,9 +145,9 @@
+   <if>
+     <equals arg1="${hadoopversion}" arg2="20" />
+     <then>
+-      <property name="hadoop.version" value="0.20.2-cdh3u1" />
+-      <property name="hbase94.version" value="0.90.3-cdh3u1" />
+-      <property name="zookeeper.version" value="3.3.3-cdh3u1" />
++      <property name="hadoop.version" value="0.20.2-cdh3u5" />
++      <property name="hbase94.version" value="0.90.6-cdh3u5" />
++      <property name="zookeeper.version" value="3.3.3-cdh3u5" />
+       <property name="hadoop.version.full" value="0.20" />
+       <property name="hcatalog.version" value="0.13.0" />
+       <property name="hbasecompatprofile" value="1" />
+@@ -170,7 +170,7 @@
+     <elseif>
+       <equals arg1="${hadoopversion}" arg2="100" />
+       <then>
+-        <property name="hadoop.version" value="1.0.0" />
++        <property name="hadoop.version" value="1.0.4" />
+         <property name="hbase94.version" value="0.92.0" />
+         <property name="zookeeper.version" value="3.4.2" />
+         <property name="hadoop.version.full" value="1.0.0" />
+diff --git a/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java b/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
+index a93114f..ac8758b 100644
+--- a/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/HBaseImportJob.java
+@@ -155,10 +155,25 @@ protected void jobSetup(Job job) throws IOException, ImportException {
+       throw new ImportException(
+           "Import to HBase error: Column family not specified");
+     }
++    Method m = null;
++    try {
++      m = HBaseConfiguration.class.getMethod("merge",
++      Configuration.class, Configuration.class);
++    } catch (NoSuchMethodException nsme) {
++    }
+ 
+-    // Add HBase configuration files to this conf object.
+-    Configuration newConf = HBaseConfiguration.create(conf);
+-    HBaseConfiguration.merge(conf, newConf);
++    if (m != null) {
++      // Add HBase configuration files to this conf object.
++
++      Configuration newConf = HBaseConfiguration.create(conf);
++      try {
++        m.invoke(null, conf, newConf);
++      } catch (Exception e) {
++        throw new ImportException(e);
++      }
++    } else {
++      HBaseConfiguration.addHbaseResources(conf);
++    }
+ 
+     HBaseAdmin admin = new HBaseAdmin(conf);
+ 
+diff --git a/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetFTPRecordReader.java b/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetFTPRecordReader.java
+index 613ee7a..0614154 100644
+--- a/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetFTPRecordReader.java
++++ b/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetFTPRecordReader.java
+@@ -201,7 +201,7 @@ public void setUp() throws IOException {
+     conf.setClass(DBConfiguration.INPUT_CLASS_PROPERTY, DummySqoopRecord.class,
+         DBWritable.class);
+ 
+-    Job job = Job.getInstance(conf);
++    Job job = new Job(conf);
+     mfDIS = new MainframeDatasetInputSplit();
+     mfDIS.addDataset("test1");
+     mfDIS.addDataset("test2");
+diff --git a/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetInputFormat.java b/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetInputFormat.java
+index 70958e0..e386fb0 100644
+--- a/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetInputFormat.java
++++ b/src/test/org/apache/sqoop/mapreduce/mainframe/TestMainframeDatasetInputFormat.java
+@@ -96,7 +96,7 @@ public void testRetrieveDatasets() throws IOException {
+ 
+     String dsName = "dsName1";
+     conf.set(MainframeConfiguration.MAINFRAME_INPUT_DATASET_NAME, dsName);
+-    Job job = Job.getInstance(conf);
++    Job job = new Job(conf);
+     format.getSplits(job);
+ 
+     List<InputSplit> splits = new ArrayList<InputSplit>();
+diff --git a/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java b/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java
+index b8c4538..924c116 100644
+--- a/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java
++++ b/src/test/org/apache/sqoop/mapreduce/sqlserver/SqlServerUpsertOutputFormatTest.java
+@@ -1,13 +1,15 @@
+ package org.apache.sqoop.mapreduce.sqlserver;
+ 
+ import static org.junit.Assert.assertEquals;
++import static org.junit.Assert.assertNotNull;
++
++import java.lang.reflect.Constructor;
+ 
+ import org.apache.commons.lang.StringUtils;
+ import org.apache.hadoop.conf.Configuration;
+ import org.apache.hadoop.mapred.lib.db.DBConfiguration;
+ import org.apache.hadoop.mapreduce.TaskAttemptContext;
+ import org.apache.hadoop.mapreduce.TaskAttemptID;
+-import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
+ import org.apache.sqoop.manager.SQLServerManager;
+ import org.apache.sqoop.mapreduce.ExportJobBase;
+ import org.apache.sqoop.mapreduce.sqlserver.SqlServerUpsertOutputFormat.SqlServerUpsertRecordWriter;
+@@ -19,7 +21,8 @@
+   @Test
+   public void Merge_statement_is_parameterized_correctly() throws Exception {
+     Configuration conf = new Configuration();
+-    conf.set(DBConfiguration.DRIVER_CLASS_PROPERTY, org.hsqldb.jdbcDriver.class.getName());
++    conf.set(DBConfiguration.DRIVER_CLASS_PROPERTY,
++      org.hsqldb.jdbcDriver.class.getName());
+     conf.set(DBConfiguration.URL_PROPERTY, "jdbc:hsqldb:.");
+     conf.set(ExportJobBase.SQOOP_EXPORT_UPDATE_COL_KEY, "");
+     conf.set(DBConfiguration.OUTPUT_FIELD_NAMES_PROPERTY, "");
+@@ -27,18 +30,49 @@ public void Merge_statement_is_parameterized_correctly() throws Exception {
+     String[] columnNames = { "FirstColumn", "SecondColumn", "ThirdColumn" };
+     String[] updateKeyColumns = { "FirstColumn" };
+     conf.set(DBConfiguration.OUTPUT_TABLE_NAME_PROPERTY, tableName);
+-    conf.set(DBConfiguration.OUTPUT_FIELD_NAMES_PROPERTY, StringUtils.join(columnNames, ','));
+-    conf.set(ExportJobBase.SQOOP_EXPORT_UPDATE_COL_KEY, StringUtils.join(updateKeyColumns, ','));
++    conf.set(DBConfiguration.OUTPUT_FIELD_NAMES_PROPERTY,
++      StringUtils.join(columnNames, ','));
++    conf.set(ExportJobBase.SQOOP_EXPORT_UPDATE_COL_KEY,
++      StringUtils.join(updateKeyColumns, ','));
+     conf.set(SQLServerManager.TABLE_HINTS_PROP, "NOLOCK");
+     conf.set(SQLServerManager.IDENTITY_INSERT_PROP, "true");
+-    TaskAttemptContext context = new TaskAttemptContextImpl(conf, new TaskAttemptID());
+-    SqlServerUpsertOutputFormat outputFormat = new SqlServerUpsertOutputFormat();
+-    SqlServerUpsertRecordWriter recordWriter = outputFormat.new SqlServerUpsertRecordWriter(context);
+-    assertEquals("SET IDENTITY_INSERT #myTable ON " +
+-      "MERGE INTO #myTable AS _target USING ( VALUES ( ?, ?, ? ) ) AS _source ( FirstColumn, SecondColumn, ThirdColumn ) ON _source.FirstColumn = _target.FirstColumn" +
+-      "  WHEN MATCHED THEN UPDATE SET _target.SecondColumn = _source.SecondColumn, _target.ThirdColumn = _source.ThirdColumn" +
+-      "  WHEN NOT MATCHED THEN INSERT ( FirstColumn, SecondColumn, ThirdColumn ) VALUES " +
+-      "( _source.FirstColumn, _source.SecondColumn, _source.ThirdColumn ) " +
+-      "OPTION (NOLOCK);", recordWriter.getUpdateStatement());
++    TaskAttemptContext context = null;
++    Class cls = null;
++    try {
++      cls =
++        Class
++        .forName("org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl");
++    }
++    catch(ClassNotFoundException cnfe) {
++      // Not hadoop 2.0
++    }
++    if (cls == null) {
++      try {
++        cls =
++          Class
++          .forName("org.apache.hadoop.mapreduce.task.TaskAttemptContext");
++      }
++      catch(ClassNotFoundException cnfe) {
++        // Something wrong
++      }
++    }
++    assertNotNull(cls);
++    Constructor c = cls.getConstructor(Configuration.class,
++        TaskAttemptID.class);
++     context = (TaskAttemptContext)c.newInstance(conf, new TaskAttemptID());
++    SqlServerUpsertOutputFormat outputFormat =
++        new SqlServerUpsertOutputFormat();
++    SqlServerUpsertRecordWriter recordWriter =
++        outputFormat.new SqlServerUpsertRecordWriter(context);
++    assertEquals("SET IDENTITY_INSERT #myTable ON "
++      + "MERGE INTO #myTable AS _target USING ( VALUES ( ?, ?, ? ) )"
++      + " AS _source ( FirstColumn, SecondColumn, ThirdColumn ) ON "
++      + "_source.FirstColumn = _target.FirstColumn"
++      + "  WHEN MATCHED THEN UPDATE SET _target.SecondColumn = "
++      + "_source.SecondColumn, _target.ThirdColumn = _source.ThirdColumn"
++      + "  WHEN NOT MATCHED THEN INSERT ( FirstColumn, SecondColumn, "
++      + " ThirdColumn ) VALUES "
++      + "( _source.FirstColumn, _source.SecondColumn, _source.ThirdColumn ) "
++      + "OPTION (NOLOCK);", recordWriter.getUpdateStatement());
+   }
+ }
+-- 
+1.7.0.4
+

@@ -1,0 +1,24 @@
+From 29e93333ec89130e40f73b49321428ce12411ba1 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Tue, 13 Aug 2013 16:00:56 -0700
+Subject: [PATCH 002/101] CLOUDERA-BUILD. Not removing cdh.build.properties file during clean
+
+---
+ build.xml |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/build.xml b/build.xml
+index a038e9d..78c1cad 100644
+--- a/build.xml
++++ b/build.xml
+@@ -1275,7 +1275,6 @@
+ 
+   <target name="clean" depends="jvm-check" description="Clean build target files">
+     <delete dir="${build.dir}"/>
+-    <delete file="${basedir}/cdh.build.properties" />
+   </target>
+ 
+   <target name="clean-cache" description="Remove cached dependencies">
+-- 
+1.7.0.4
+

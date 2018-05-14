@@ -1,0 +1,25 @@
+From b7796a407e82d12dc85b148decd72fa98a206887 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Thu, 5 Mar 2015 09:22:46 -0800
+Subject: [PATCH 088/101] CLOUDERA-BUILD. Adding conjars repository for some of the Calcite dependencies
+
+---
+ ivy/ivysettings.xml |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/ivy/ivysettings.xml b/ivy/ivysettings.xml
+index 664c0ab..81b1e33 100644
+--- a/ivy/ivysettings.xml
++++ b/ivy/ivysettings.xml
+@@ -75,6 +75,8 @@ under the License.
+         pattern="${maven2.pattern.ext}" m2compatible="true"/>
+     <ibiblio name="springsource" root="http://repo.springsource.org/libs-release-remote/"
+         pattern="${maven2.pattern.ext}" m2compatible="true"/>
++    <ibiblio name="conjars" root="http://conjars.org/repo"
++        pattern="${maven2.pattern.ext}" m2compatible="true"/>
+ 
+     <filesystem name="fs" m2compatible="true">
+        <artifact pattern="${repo.dir}/[organisation]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"/>
+-- 
+1.7.0.4
+

@@ -1,0 +1,35 @@
+From 0231343262e1e87dd9982b9cf001a5c570798150 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Fri, 23 Jan 2015 17:28:48 -0800
+Subject: [PATCH 074/101] SQOOP-2024: Hive import doesn't remove target directory in hive
+
+(Abraham Elmahrek via Jarek Jarcec Cecho)
+---
+ src/java/org/apache/sqoop/hive/HiveImport.java |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/hive/HiveImport.java b/src/java/org/apache/sqoop/hive/HiveImport.java
+index 07a354b..097d622 100644
+--- a/src/java/org/apache/sqoop/hive/HiveImport.java
++++ b/src/java/org/apache/sqoop/hive/HiveImport.java
+@@ -34,6 +34,7 @@
+ import org.apache.hadoop.fs.FileSystem;
+ import org.apache.hadoop.fs.Path;
+ import org.apache.hadoop.conf.Configuration;
++import org.apache.hadoop.mapred.FileOutputCommitter;
+ import org.apache.hadoop.util.ReflectionUtils;
+ import org.apache.hadoop.util.Shell;
+ import org.apache.hadoop.util.ToolRunner;
+@@ -273,6 +274,9 @@ private void cleanUp(Path outputPath) throws IOException {
+         if (statuses.length == 0) {
+           LOG.info("Export directory is empty, removing it.");
+           fs.delete(outputPath, true);
++        } else if (statuses.length == 1 && statuses[0].getPath().getName().equals(FileOutputCommitter.SUCCEEDED_FILE_NAME)) {
++          LOG.info("Export directory is contains the _SUCCESS file only, removing the directory.");
++          fs.delete(outputPath, true);
+         } else {
+           LOG.info("Export directory is not empty, keeping it.");
+         }
+-- 
+1.7.0.4
+

@@ -1,0 +1,171 @@
+From 617227003171f1dc37734b523db07d3b036793b7 Mon Sep 17 00:00:00 2001
+From: Venkat Ranganathan <venkat@hortonworks.com>
+Date: Mon, 15 Sep 2014 14:17:40 -0700
+Subject: [PATCH 040/101] SQOOP-1519: Enable HCat/HBase/Accumulo operations with OraOop connection manager
+
+---
+ src/java/org/apache/sqoop/manager/ConnManager.java |   20 +++++++++++++++
+ .../sqoop/manager/oracle/OraOopConnManager.java    |   26 ++++++++++++++++++++
+ .../org/apache/sqoop/mapreduce/ExportJobBase.java  |   14 ++++++++++-
+ .../org/apache/sqoop/mapreduce/ImportJobBase.java  |   11 +++++++-
+ src/java/org/apache/sqoop/tool/BaseSqoopTool.java  |    9 +------
+ 5 files changed, 70 insertions(+), 10 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/ConnManager.java b/src/java/org/apache/sqoop/manager/ConnManager.java
+index c4a0e9d..d9569c5 100644
+--- a/src/java/org/apache/sqoop/manager/ConnManager.java
++++ b/src/java/org/apache/sqoop/manager/ConnManager.java
+@@ -794,5 +794,25 @@ public boolean isCharColumn(int columnType) {
+   public boolean isDirectModeHCatSupported() {
+     return false;
+   }
++
++
++  /**
++   * Determine if HBase operations from direct mode of the connector is
++   * allowed.  By default direct mode is not compatible with HBase
++   * @return Whether direct mode is allowed.
++   */
++  public boolean isDirectModeHBaseSupported() {
++    return false;
++  }
++
++  /**
++   * Determine if Accumulo operations from direct mode of the connector is
++   * allowed.  By default direct mode is not compatible with HBase
++   * @return Whether direct mode is allowed.
++   */
++  public boolean isDirectModeAccumuloSupported() {
++    return false;
++  }
++
+ }
+ 
+diff --git a/src/java/org/apache/sqoop/manager/oracle/OraOopConnManager.java b/src/java/org/apache/sqoop/manager/oracle/OraOopConnManager.java
+index 3879453..55a2b4c 100644
+--- a/src/java/org/apache/sqoop/manager/oracle/OraOopConnManager.java
++++ b/src/java/org/apache/sqoop/manager/oracle/OraOopConnManager.java
+@@ -631,5 +631,31 @@ private void explainWhyExportClassCannotBeLoaded(NoClassDefFoundError ex,
+             .getJavaClassPath());
+     LOG.fatal(msg, ex);
+   }
++  /**
++   * Determine if HCat integration from direct mode of the connector is
++   * allowed.  By default direct mode is not compatible with HCat
++   * @return Whether direct mode is allowed.
++   */
++  @Override
++  public boolean isDirectModeHCatSupported() {
++    return true;
++  }
+ 
++  /**
++   * Determine if HBase operations from direct mode of the connector is
++   * allowed.  By default direct mode is not compatible with HBase
++   * @return Whether direct mode is allowed.
++   */
++  public boolean isDirectModeHBaseSupported() {
++    return true;
++  }
++
++  /**
++   * Determine if Accumulo operations from direct mode of the connector is
++   * allowed.  By default direct mode is not compatible with HBase
++   * @return Whether direct mode is allowed.
++   */
++  public boolean isDirectModeAccumuloSupported() {
++    return true;
++  }
+ }
+diff --git a/src/java/org/apache/sqoop/mapreduce/ExportJobBase.java b/src/java/org/apache/sqoop/mapreduce/ExportJobBase.java
+index 100c73c..cb846e8 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ExportJobBase.java
++++ b/src/java/org/apache/sqoop/mapreduce/ExportJobBase.java
+@@ -39,7 +39,9 @@
+ import org.apache.sqoop.mapreduce.hcat.SqoopHCatUtilities;
+ import org.apache.sqoop.util.LoggingUtils;
+ import org.apache.sqoop.util.PerfCounters;
++
+ import com.cloudera.sqoop.SqoopOptions;
++import com.cloudera.sqoop.SqoopOptions.InvalidOptionsException;
+ import com.cloudera.sqoop.config.ConfigurationHelper;
+ import com.cloudera.sqoop.lib.SqoopRecord;
+ import com.cloudera.sqoop.manager.ConnManager;
+@@ -47,6 +49,7 @@
+ import com.cloudera.sqoop.orm.TableClassName;
+ import com.cloudera.sqoop.mapreduce.JobBase;
+ import com.cloudera.sqoop.util.ExportException;
++
+ import org.apache.sqoop.validation.*;
+ 
+ /**
+@@ -327,7 +330,16 @@ public void runExport() throws ExportException, IOException {
+         + context.getConnManager().getClass().getName()
+         + ". Please remove the parameter --direct");
+     }
+-
++    if (options.getAccumuloTable() != null && options.isDirect()
++        && !cmgr.isDirectModeAccumuloSupported()) {
++      throw new IOException("Direct mode is incompatible with "
++            + "Accumulo. Please remove the parameter --direct");
++    }
++    if (options.getHBaseTable() != null && options.isDirect()
++        && !cmgr.isDirectModeHBaseSupported()) {
++      throw new IOException("Direct mode is incompatible with "
++            + "HBase. Please remove the parameter --direct");
++    }
+     if (stagingTableName != null) { // user has specified the staging table
+       if (cmgr.supportsStagingForExport()) {
+         LOG.info("Data will be staged in the table: " + stagingTableName);
+diff --git a/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java b/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java
+index 7b5ed66..dab5606 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java
++++ b/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java
+@@ -223,7 +223,16 @@ public void runImport(String tableName, String ormJarFile, String splitByCol,
+         + context.getConnManager().getClass().getName()
+         + ". Please remove the parameter --direct");
+     }
+-
++    if (options.getAccumuloTable() != null && options.isDirect()
++        && !getContext().getConnManager().isDirectModeAccumuloSupported()) {
++      throw new IOException("Direct mode is incompatible with "
++            + "Accumulo. Please remove the parameter --direct");
++    }
++    if (options.getHBaseTable() != null && options.isDirect()
++        && !getContext().getConnManager().isDirectModeHBaseSupported()) {
++      throw new IOException("Direct mode is incompatible with "
++            + "HBase. Please remove the parameter --direct");
++    }
+     if (null != tableName) {
+       LOG.info("Beginning import of " + tableName);
+     } else {
+diff --git a/src/java/org/apache/sqoop/tool/BaseSqoopTool.java b/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
+index 26950cc..3104454 100644
+--- a/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
++++ b/src/java/org/apache/sqoop/tool/BaseSqoopTool.java
+@@ -1425,10 +1425,7 @@ protected void validateAccumuloOptions(SqoopOptions options)
+           "Both --accumulo-table and --accumulo-column-family must be set."
+           + HELP_STR);
+     }
+-    if (options.getAccumuloTable() != null && options.isDirect()) {
+-      throw new InvalidOptionsException("Direct import is incompatible with "
+-            + "Accumulo. Please remove parameter --direct");
+-    }
++
+     if (options.getAccumuloTable() != null
+         && options.getHBaseTable() != null) {
+       throw new InvalidOptionsException("HBase import is incompatible with "
+@@ -1576,10 +1573,6 @@ protected void validateHBaseOptions(SqoopOptions options)
+           "Both --hbase-table and --column-family must be set together."
+           + HELP_STR);
+     }
+-    if (options.getHBaseTable() != null && options.isDirect()) {
+-      throw new InvalidOptionsException("Direct import is incompatible with "
+-        + "HBase. Please remove parameter --direct");
+-    }
+ 
+     if (options.isBulkLoadEnabled() && options.getHBaseTable() == null) {
+       String validationMessage = String.format("Can't run import with %s "
+-- 
+1.7.0.4
+

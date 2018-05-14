@@ -1,0 +1,46 @@
+From 70ffcf640c44d9c79c04fc82dd061bea3b039a44 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 19 Nov 2014 10:06:41 -0800
+Subject: [PATCH 064/101] SQOOP-1567: Auto-Configure JTDS Driver From JDBCUrl
+
+(Nick White via Jarek Jarcec Cecho)
+---
+ .../sqoop/manager/DefaultManagerFactory.java       |    4 ++++
+ .../org/apache/sqoop/manager/SQLServerManager.java |    6 +++++-
+ 2 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/DefaultManagerFactory.java b/src/java/org/apache/sqoop/manager/DefaultManagerFactory.java
+index 5400c43..58ff745 100644
+--- a/src/java/org/apache/sqoop/manager/DefaultManagerFactory.java
++++ b/src/java/org/apache/sqoop/manager/DefaultManagerFactory.java
+@@ -66,6 +66,10 @@ public ConnManager accept(JobData data) {
+       return new OracleManager(options);
+     } else if (scheme.startsWith("jdbc:sqlserver:")) {
+       return new SQLServerManager(options);
++    } else if (scheme.startsWith("jdbc:jtds:sqlserver:")) {
++      return new SQLServerManager(
++        "net.sourceforge.jtds.jdbc.Driver",
++        options);
+     } else if (scheme.startsWith("jdbc:db2:")) {
+       return new Db2Manager(options);
+     } else if (scheme.startsWith("jdbc:netezza:")) {
+diff --git a/src/java/org/apache/sqoop/manager/SQLServerManager.java b/src/java/org/apache/sqoop/manager/SQLServerManager.java
+index 60d380e..9a3d918 100644
+--- a/src/java/org/apache/sqoop/manager/SQLServerManager.java
++++ b/src/java/org/apache/sqoop/manager/SQLServerManager.java
+@@ -91,7 +91,11 @@
+   private boolean identityInserts;
+ 
+   public SQLServerManager(final SqoopOptions opts) {
+-    super(DRIVER_CLASS, opts);
++    this(DRIVER_CLASS, opts);
++  }
++
++  public SQLServerManager(final String driver, final SqoopOptions opts) {
++    super(driver, opts);
+ 
+     // Try to parse extra arguments
+     try {
+-- 
+1.7.0.4
+

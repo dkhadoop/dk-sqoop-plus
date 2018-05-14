@@ -1,0 +1,25 @@
+From 218e7906b8d26e851c1c956215dc908d3bccfb60 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Fri, 18 Oct 2013 11:06:48 -0700
+Subject: [PATCH 005/101] CLODUERA-BUILD. Changing maven repository URL
+
+---
+ cloudera-pom.xml |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/cloudera-pom.xml b/cloudera-pom.xml
+index b64ea78..10a567e 100644
+--- a/cloudera-pom.xml
++++ b/cloudera-pom.xml
+@@ -66,7 +66,7 @@
+       <repositories>
+         <repository>
+           <id>cdh.releases.repo</id>
+-          <url>https://repository.cloudera.com/content/group/cdh-releases-rcs</url>
++          <url>https://repository.cloudera.com/content/groups/cdh-releases-rcs</url>
+           <name>CDH Releases Repository</name>
+           <snapshots>
+             <enabled>false</enabled>
+-- 
+1.7.0.4
+

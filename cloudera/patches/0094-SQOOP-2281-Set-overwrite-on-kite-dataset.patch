@@ -1,0 +1,75 @@
+From ee996d6317afade813ec78df85237790af319795 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Fri, 3 Apr 2015 09:45:55 -0700
+Subject: [PATCH 094/101] SQOOP-2281: Set overwrite on kite dataset
+
+(Abraham Elmahrek via Jarek Jarcec Cecho)
+---
+ .../sqoop/mapreduce/DataDrivenImportJob.java       |    5 ++---
+ .../org/apache/sqoop/mapreduce/ParquetJob.java     |   11 ++++++++---
+ .../com/cloudera/sqoop/hive/TestHiveImport.java    |    3 +++
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+index bcf6611..e70d23c 100644
+--- a/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/DataDrivenImportJob.java
+@@ -103,9 +103,8 @@ protected void configureMapper(Job job, String tableName,
+       // Parquet data records. The import will fail, if schema is invalid.
+       Schema schema = generateAvroSchema(tableName);
+       String uri = getKiteUri(conf, tableName);
+-      boolean reuseExistingDataset = options.isAppendMode() ||
+-          (options.doHiveImport() && options.doOverwriteHiveTable());
+-      ParquetJob.configureImportJob(conf, schema, uri, reuseExistingDataset);
++      ParquetJob.configureImportJob(conf, schema, uri, options.isAppendMode(),
++          options.doHiveImport() && options.doOverwriteHiveTable());
+     }
+ 
+     job.setMapperClass(getMapperClass());
+diff --git a/src/java/org/apache/sqoop/mapreduce/ParquetJob.java b/src/java/org/apache/sqoop/mapreduce/ParquetJob.java
+index 85d88ff..df55dbc 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ParquetJob.java
++++ b/src/java/org/apache/sqoop/mapreduce/ParquetJob.java
+@@ -71,9 +71,9 @@ public static CompressionType getCompressionType(Configuration conf) {
+    * {@link org.apache.avro.generic.GenericRecord}.
+    */
+   public static void configureImportJob(Configuration conf, Schema schema,
+-      String uri, boolean reuseExistingDataset) throws IOException {
++      String uri, boolean reuseExistingDataset, boolean overwrite) throws IOException {
+     Dataset dataset;
+-    if (reuseExistingDataset) {
++    if (reuseExistingDataset || overwrite) {
+       try {
+         dataset = Datasets.load(uri);
+       } catch (DatasetNotFoundException ex) {
+@@ -89,7 +89,12 @@ public static void configureImportJob(Configuration conf, Schema schema,
+       dataset = createDataset(schema, getCompressionType(conf), uri);
+     }
+     conf.set(CONF_AVRO_SCHEMA, schema.toString());
+-    DatasetKeyOutputFormat.configure(conf).writeTo(dataset);
++
++    if (overwrite) {
++      DatasetKeyOutputFormat.configure(conf).overwrite(dataset);
++    } else {
++      DatasetKeyOutputFormat.configure(conf).writeTo(dataset);
++    }
+   }
+ 
+   private static Dataset createDataset(Schema schema,
+diff --git a/src/test/com/cloudera/sqoop/hive/TestHiveImport.java b/src/test/com/cloudera/sqoop/hive/TestHiveImport.java
+index d6df196..fa717cb 100644
+--- a/src/test/com/cloudera/sqoop/hive/TestHiveImport.java
++++ b/src/test/com/cloudera/sqoop/hive/TestHiveImport.java
+@@ -307,6 +307,9 @@ public void testCreateOverwriteHiveImport() throws IOException {
+     runImportTest(TABLE_NAME, types, vals,
+         "createOverwriteImport.q", getCreateHiveTableArgs(extraArgs),
+         new CreateHiveTableTool());
++    runImportTest(TABLE_NAME, types, vals,
++        "createOverwriteImport.q", getCreateHiveTableArgs(extraArgs),
++        new CreateHiveTableTool());
+   }
+ 
+   /** Test that dates are coerced properly to strings. */
+-- 
+1.7.0.4
+

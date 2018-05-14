@@ -1,0 +1,71 @@
+From 6b70d0e6a993f02624b97487a2a850e30a3c6222 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Tue, 2 Sep 2014 09:36:41 +0200
+Subject: [PATCH 031/101] SQOOP-1433: Oracle direct connector fails with Oracle 12c JDBC driver
+
+(David Robson via Jarek Jarcec Cecho)
+---
+ .../manager/oracle/OracleConnectionFactory.java    |    6 +++++-
+ .../sqoop/manager/oracle/OraOopTestCase.java       |    1 +
+ .../sqoop/manager/oracle/SystemImportTest.java     |    2 ++
+ 3 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/manager/oracle/OracleConnectionFactory.java b/src/java/org/apache/sqoop/manager/oracle/OracleConnectionFactory.java
+index 094576b..8fd385c 100644
+--- a/src/java/org/apache/sqoop/manager/oracle/OracleConnectionFactory.java
++++ b/src/java/org/apache/sqoop/manager/oracle/OracleConnectionFactory.java
+@@ -93,7 +93,9 @@ private static Connection createConnection(String jdbcUrl, String username,
+     }
+ 
+     try {
+-      return DriverManager.getConnection(jdbcUrl, props);
++      Connection result = DriverManager.getConnection(jdbcUrl, props);
++      result.setAutoCommit(false);
++      return result;
+     } catch (SQLException ex) {
+       String errorMsg = String.format(
+         "Unable to obtain a JDBC connection to the URL \"%s\" as user \"%s\": ",
+@@ -108,6 +110,8 @@ public static void initializeOracleConnection(Connection connection,
+ 
+     connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+ 
++    connection.setAutoCommit(false);
++
+     OraOopOracleQueries.setConnectionTimeZone(connection, conf);
+ 
+     setSessionClientInfo(connection, conf);
+diff --git a/src/test/org/apache/sqoop/manager/oracle/OraOopTestCase.java b/src/test/org/apache/sqoop/manager/oracle/OraOopTestCase.java
+index 4546464..27b53ee 100644
+--- a/src/test/org/apache/sqoop/manager/oracle/OraOopTestCase.java
++++ b/src/test/org/apache/sqoop/manager/oracle/OraOopTestCase.java
+@@ -100,6 +100,7 @@ protected Connection getTestEnvConnection() throws SQLException {
+       this.conn =
+           DriverManager.getConnection(OracleUtils.CONNECT_STRING,
+               OracleUtils.ORACLE_USER_NAME, OracleUtils.ORACLE_USER_PASS);
++      this.conn.setAutoCommit(false);
+     }
+     return this.conn;
+   }
+diff --git a/src/test/org/apache/sqoop/manager/oracle/SystemImportTest.java b/src/test/org/apache/sqoop/manager/oracle/SystemImportTest.java
+index 0f85854..f6e5c0e 100644
+--- a/src/test/org/apache/sqoop/manager/oracle/SystemImportTest.java
++++ b/src/test/org/apache/sqoop/manager/oracle/SystemImportTest.java
+@@ -153,6 +153,7 @@ public void importTest() throws Exception {
+           }
+         } finally {
+           ps.close();
++          conn.commit();
+         }
+ 
+         // Can't bind > 4000 bytes of data to LONG and LOB columns in the same
+@@ -168,6 +169,7 @@ public void importTest() throws Exception {
+           }
+         } finally {
+           ps.close();
++          conn.commit();
+         }
+ 
+         try {
+-- 
+1.7.0.4
+

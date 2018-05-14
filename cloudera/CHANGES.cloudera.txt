@@ -1,0 +1,755 @@
+commit ddbcf79ce4ce5ccc7759ddb34ef79fc50e016430
+Author: Jenkins <dev-kitchen@cloudera.com>
+Date:   Thu Jul 2 21:58:15 2015 -0700
+
+    Branch for CDH5.4.4
+
+commit b6d82b4c1df60eee74d003b942fc1f20e60bde14
+Author: Jenkins <dev-kitchen@cloudera.com>
+Date:   Fri Jun 5 08:39:43 2015 -0700
+
+    Branch for CDH5.4.3
+
+commit f5c8e97f577205468e5359552522212868001ff9
+Author: Jenkins <dev-kitchen@cloudera.com>
+Date:   Tue May 19 17:22:38 2015 -0700
+
+    Updating Maven version to 5.4.3-SNAPSHOT
+
+commit c7fdf8bc7bc41e9fd7c3c795668c545050b9926c
+Author: Jenkins <dev-kitchen@cloudera.com>
+Date:   Mon May 4 10:09:03 2015 -0700
+
+    Updating Maven version to 5.4.2-SNAPSHOT
+
+commit 00c62fcb3373a29527eb34716f1e416617362e78
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Apr 30 18:45:52 2015 -0700
+
+    SQOOP-2343: AsyncSqlRecordWriter stucks if any exception is thrown out in its close method
+    
+    (Yibing Shi via Jarek Jarcec Cecho)
+
+commit 08ff8838e0b89f6da79eeecb577f1ec77a24bdbe
+Author: Gwen Shapira <cshapi@gmail.com>
+Date:   Tue Apr 7 19:39:02 2015 -0700
+
+    SQOOP-2286: Ensure Sqoop generates valid avro column names
+    
+    (Abraham Elmahrek via Gwen Shapira)
+
+commit fd923a8bd05233709d92491b824b1ff8a1775653
+Author: Gwen Shapira <cshapi@gmail.com>
+Date:   Tue Apr 7 19:15:59 2015 -0700
+
+    SQOOP-2283: Support usage of --exec and --password-alias
+    
+    (Abraham Elmahrek via Gwen Shapira)
+
+commit ee996d6317afade813ec78df85237790af319795
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Apr 3 09:45:55 2015 -0700
+
+    SQOOP-2281: Set overwrite on kite dataset
+    
+    (Abraham Elmahrek via Jarek Jarcec Cecho)
+
+commit ed07fcd5d3745dcd84d1758af4d87713a0a8de4c
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Apr 3 09:11:34 2015 -0700
+
+    SQOOP-2282: Add validation check for --hive-import and --append
+    
+    (Abraham Elmahrek via Jarek Jarcec Cecho)
+
+commit 0532d163f5cfa6dcd1c95101ef59cc5115ebf121
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Mar 24 06:43:30 2015 -0700
+
+    SQOOP-2257: Parquet target for imports with Hive overwrite option does not work
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit 46360b0bf1128dca3bfd675137a34d41ebc830a5
+Author: Andrew Bayer <andrew@cloudera.com>
+Date:   Tue Mar 31 09:01:57 2015 -0700
+
+    CLOUDERA-BUILD - simplifying ivy
+
+commit 1a580afec7b8c60fc11b645f7aab7ebcbdb73361
+Author: Jenkins slave <kitchen-build@cloudera.com>
+Date:   Mon Mar 16 10:46:02 2015 -0700
+
+    Preparing for CDH5.4.1
+
+commit 62baf8b1ed7302c0d712ce80d5f904a1350da916
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Mar 5 10:55:44 2015 -0800
+
+    CLOUDERA-BUILD. Adding conjars repository for some of the Calcite dependencies
+
+commit b7796a407e82d12dc85b148decd72fa98a206887
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Mar 5 09:22:46 2015 -0800
+
+    CLOUDERA-BUILD. Adding conjars repository for some of the Calcite dependencies
+
+commit 7b79fca7a4f5aefc092b0b7cf74501f57aeea5fd
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Wed Mar 4 16:33:08 2015 -0800
+
+    SQOOP-2170: MySQL specific tests are not properly cleaning up created tables
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit c38a3d965f67ff27722bb20f72a51aed3bca493a
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sat Feb 28 08:39:31 2015 -0800
+
+    SQOOP-2145: Default Hive home is not being set properly under certain circumstances
+    
+    (Mark Grover via Jarek Jarcec Cecho)
+
+commit 062c01ea6737a445bc2ece2d6114713c9c83f864
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Feb 26 09:02:19 2015 -0800
+
+    SQOOP-2137: Sqoop tests and documentation refer to as-avrofile (instead of as-avrodatafile)
+    
+    (Mark Grover via Jarek Jarcec Cecho)
+
+commit 0c67458ca2813d3eea672c9a44eb617a17140323
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Wed Feb 25 18:28:13 2015 -0800
+
+    SQOOP-2136: Test case SqlServerUpsertOutputFormatTest is failing
+      (Jarek Jarcec Cecho via Venkat Ranganathan)
+
+commit add2b0a486febcfccaa149d1553eb434030a1c98
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Wed Feb 25 17:54:09 2015 -0800
+
+    SQOOP-2132: Remove test TestMainframeImportTool.testPrintHelp
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit 255a140aef142f3db10cbcaa5539b91b33304630
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Wed Feb 25 17:50:02 2015 -0800
+
+    SQOOP-2132: Sqoop2: Upgrade configs with name conflicts
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit 20e5b571dfdf0e09b028a31c93696cdc36aff3ad
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Feb 25 17:14:41 2015 -0800
+
+    CLOUDERA-BUILD. Moving Accumulo to 1.6.2
+
+commit 09c78858c0a6fc34ff174e80555a5e27517351d4
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Tue Feb 24 18:07:45 2015 -0800
+
+    SQOOP-2130: BaseSqoopTestCase should use manager.escapeTable instead of directly hardcoding double quotes
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit f9df089a441ccbfe09496ebc29eb5ab614f1ef5c
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Feb 23 22:16:25 2015 -0800
+
+    SQOOP-2128: HBaseImportJob should close connection from HBaseAdmin to HBase
+    
+    (Esteban Gutierrez via Jarek Jarcec Cecho)
+
+commit e60671c85c4c045d9bcdff491da19ff4c0b9bec5
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Feb 18 07:44:03 2015 -0800
+
+    CLOUDERA-BUILD. Switching source/target to JDK7.
+    
+    CDH-25311: Sqoop - Build all C5 components with -source/-target 1.7
+
+commit 400072c59d34dd94cba231f162b59270cf73ed7d
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Feb 4 12:45:57 2015 -0800
+
+    SQOOP-2057: Skip delegation token generation flag during hbase import
+    
+    (Abraham Elmahrek via Jarek Jarcec Cecho)
+
+commit 23fb75114ea1458bfbcc0861492567ea9c7d1ace
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Feb 8 08:27:43 2015 -0800
+
+    CLOUDERA-BUILD. Adding repositories for calcite dependencies
+    
+    CDH-24952: Sqoop packaging build is failing
+
+commit c009d068e38254ac300535a50f2bce3c282876e5
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Wed Jan 28 22:45:05 2015 -0800
+
+    SQOOP-2055:  Run only one map task attempt during export
+    
+    (Jarek Jarcec Cecho via Venkat Ranganathan)
+
+commit 0231343262e1e87dd9982b9cf001a5c570798150
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Jan 23 17:28:48 2015 -0800
+
+    SQOOP-2024: Hive import doesn't remove target directory in hive
+    
+    (Abraham Elmahrek via Jarek Jarcec Cecho)
+
+commit bd3ba85b442884e5771da234e2dbdaa26c243a90
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Sun Jan 18 21:08:06 2015 -0800
+
+    SQOOP-2017: Print out loaded columns and their type in verbose mode
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit dc20e8c5ea6f5ce1fab2d983d395c5b001ff10c4
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Jan 6 10:14:38 2015 +0100
+
+    SQOOP-1826: NPE in ImportTool.lastModifiedMerge during postgres import
+    
+    (Ricky Nguyen via Jarek Jarcec Cecho)
+
+commit e26c9ff13d3adca99eaec3454dd5fbc2ddbc7b1d
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Mon Jan 5 17:02:20 2015 -0800
+
+    SQOOP-1970: Add warning about trailing whitespace characters when using password file to User guide
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit a98910ee9948c6cd658e0b277a98324090d2e631
+Author: Abraham Elmahrek <abe@apache.org>
+Date:   Wed Dec 17 11:09:43 2014 -0800
+
+    SQOOP-1890: Properly escape table name in generated queries
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit 71ea6667d7f6b11b81b9fb66859248d92e82df60
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Dec 16 09:00:14 2014 -0800
+
+    SQOOP-1631: Drop confusing use of --clean-staging-table parameter from PGBulkloadManager
+    
+    (Masahiro Yamaguchi via Jarek Jarcec Cecho)
+
+commit 845a09d145479db40690e1e4cfe490825af1fe42
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Wed Nov 26 14:40:44 2014 -0800
+
+    SQOOP-1627: Fix Hadoop100  and Hadoop20 profile
+    
+    (Venkat Ranganathan via Abraham Elmahrek)
+
+commit a0976a857806e98aa80f36241fa3c365155fb2c5
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sat Nov 22 14:36:11 2014 -0800
+
+    SQOOP-1779: Add support for --hive-database when importing Parquet files into Hive
+    
+    (Josh Wills via Jarek Jarcec Cecho)
+
+commit d34d5bcbd011842cae5b56406f417896a1fb311e
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Nov 20 06:07:25 2014 -0800
+
+    SQOOP-1622: Copying from staging table should be in single transaction for pg_bulkload connector
+    
+    (Masatake Iwasaki via Jarek Jarcec Cecho)
+
+commit d33070d3749d5e1bf6d3da2cb8de90c9bf3d93b0
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Nov 19 15:15:05 2014 -0800
+
+    SQOOP-1125: Out of memory errors when number of records to import < 0.5 * splitSize
+    
+    (Sai Karthik Ganguru via Jarek Jarcec Cecho)
+
+commit 70ffcf640c44d9c79c04fc82dd061bea3b039a44
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Nov 19 10:06:41 2014 -0800
+
+    SQOOP-1567: Auto-Configure JTDS Driver From JDBCUrl
+    
+    (Nick White via Jarek Jarcec Cecho)
+
+commit 30b90414ab9f9887c3a5be2ceb526a7ead652f67
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Nov 19 09:18:58 2014 -0800
+
+    SQOOP-1759: TestIncrementalImport fails with NPE on Windows
+    
+    (Venkat Ranganathan via Jarek Jarcec Cecho)
+
+commit 3961095c5a95326105f3005ea8948d8b25ef1a51
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Tue Nov 18 20:20:29 2014 -0800
+
+    SQOOP-1764: Numeric Overflow when getting extent map
+    (David Robson via Venkat Ranganathan)
+
+commit 18c1e2e135a6f4aac9edff2cb273e8200e24c676
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Nov 9 23:25:46 2014 -0800
+
+    SQOOP-1391: Compression codec handling
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit 7fae392a0247add28068ccb944a6d01ae6bc0f38
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Tue Nov 18 14:27:20 2014 -0800
+
+    CLOUDERA-BUILD. CDH-20842: Partial hadoop installation fix
+
+commit f5d0bbaf01ac7950050d95a623be7633b4748763
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Nov 9 20:47:33 2014 -0800
+
+    SQOOP-1693: Upgrade Kite SDK to 0.17
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit c262944c61bbfc8b8822ceeaabe90a81e1c2ff54
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Nov 9 20:28:35 2014 -0800
+
+    SQOOP-1684: Use pre-existing HBase delegation token
+    
+    (Abraham Elmahrek via Jarek Jarcec Cecho)
+
+commit a5201ef1e8e1e1ac5443e4464ab201a3ad30f94c
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Fri Nov 7 11:25:28 2014 -0800
+
+    SQOOP-1632: Add support for index organized tables to direct connector
+    
+    (David Robson via Abraham Elmahrek)
+
+commit aca10d63d72df03ace6c982ee2befdaf3b80ad3a
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Wed Nov 5 20:17:05 2014 -0800
+
+    SQOOP-1685: HCatalog integration is not working on JDK8
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit c5979b51bd1855c5cc6975163db37ea5e48c075a
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Wed Nov 5 16:12:06 2014 -0800
+
+    SQOOP-1682: Test cases *LobAvroImportTest are failing
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit ada5836693eaee410dc939fd3ecf152b7a9c13ef
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Wed Nov 5 14:20:14 2014 -0800
+
+    SQOOP-1663: OraOop test cases are not logging any output
+
+commit 3101fedd143c75779669f7211b6d768c74791dfa
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Wed Nov 5 14:04:40 2014 -0800
+
+    SQOOP-1617: MySQL fetch-size behavior changed with SQOOP-1400
+    
+    (Jarek Jarcec Cecho via Abraham Elmahrek)
+
+commit daa99dd5e4c9a71119ed2d5c8b1ca5bace6266f9
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Fri Oct 24 11:06:00 2014 -0700
+
+    SQOOP-1403 Upsert export for SQL Server
+    
+    (Keegan Witt via Venkat Ranganathan)
+
+commit f85dfea41130741165c1c06aa12c553f27c8bfcc
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Oct 21 16:04:22 2014 -0700
+
+    SQOOP-1472: Use Properties.load() method to load property files under conf/manager.d
+    
+    (Chiwan Park via Jarek Jarcec Cecho)
+
+commit 966a666abc72583e021ac8eb8b7b7eeddb155e40
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Wed Oct 8 13:59:47 2014 -0700
+
+    SQOOP-1471: Use Hadoop CredentialProvider API to encyrpt passwords at rest
+    
+    (Venkat Ranganathan via Abraham Elmahrek)
+
+commit 72f1e2a59374c175434aaa74488163b2971baa4f
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Oct 6 18:04:25 2014 -0700
+
+    SQOOP-1437: 'Text' reserved word in compliation
+    
+    (Nick White via Jarek Jarcec Cecho)
+
+commit e90db7871fd48db0d9914dd23a29cbb045d46ac5
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Sep 29 16:43:50 2014 -0700
+
+    SQOOP-1540: Accumulo unit tests fail with Accumulo 1.6.1 because of conflicts in libthrift libraries
+    
+    (Venkat Ranganathan via Jarek Jarcec Cecho)
+
+commit 1c1c2cc9dfbceeaa1122fa2117475b459a0112bf
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Sep 24 16:44:27 2014 -0700
+
+    SQOOP-1539: Empty partition keys and values in multiple partition key hcatalog usage should be validated
+    
+    (Venkat Ranganathan via Jarek Jarcec Cecho)
+
+commit 863d44f816ae3c05a9df3b0fd982cee1e521e705
+Author: Jenkins slave <kitchen-build@cloudera.com>
+Date:   Tue Oct 28 10:21:40 2014 -0700
+
+    Preparing for CDH5.4.0 development
+
+commit fd3c0e51d3a0afed91c327024f9d61f5f0b3814a
+Author: Jenkins slave <kitchen-build@cloudera.com>
+Date:   Fri Sep 26 09:26:31 2014 -0700
+
+    Preparing for CDH5.3.0 development
+
+commit 0c6d0d1dbdfa149cad5fb2fafd9d7ff5d02d0bad
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Fri Sep 19 15:26:41 2014 -0700
+
+    CLOUDERA-BUILD. Add kite CDH version
+
+commit 1b800d9fe63313d076d830fa4771a9c00e8d9d4f
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Sep 17 10:04:29 2014 +0200
+
+    SQOOP-1524: Error to import into hive as textfile on hive 0.13.0
+    
+    (Richard via Jarek Jarcec Cecho)
+
+commit 9a6ef90075c5200646d0ed84e3c407d3680f7092
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Sep 17 09:44:27 2014 +0200
+
+    SQOOP-1520: The table is null when using import into hive as parquet file and query option
+    
+    (Richard via Jarek Jarcec Cecho)
+
+commit 79f8c1a7e767b6bd582e7a63fae1616cad542f58
+Author: Chiwan Park <chiwanpark@icloud.com>
+Date:   Tue Sep 16 16:17:29 2014 -0700
+
+    SQOOP-1387: Incorrect permissions on manager.d directory can lead to NPE
+
+commit 617227003171f1dc37734b523db07d3b036793b7
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Mon Sep 15 14:17:40 2014 -0700
+
+    SQOOP-1519: Enable HCat/HBase/Accumulo operations with OraOop connection manager
+
+commit 34bc01bca73624def3edc63b8c93f098e4b12e97
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Sep 11 08:29:41 2014 +0200
+
+    SQOOP-1508: Add warning when using unsupported compression codec
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit 4bc9cfc176c40a67578870e211a8ed2604e66891
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Tue Sep 9 23:26:24 2014 -0700
+
+    SQOOP-1272: Support importing mainframe sequential datasets
+    
+     (Mariappan Asokan via Venkat Ranganathan)
+
+commit 3830c8b678bd75b0975a5274f6badf33029f3358
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Sep 9 15:30:40 2014 +0200
+
+    SQOOP-1394: Export data from HDFS back to an RDMS
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit d8b294086d33e58361282e7e7402cc403c34d401
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Sep 5 09:21:50 2014 +0200
+
+    SQOOP-1490: Connectors documentation doesn't build on CentOS 5
+    
+    (Abraham Elmahrek via Jarek Jarcec Cecho)
+
+commit e585fe36de4c3baeb694662f8d080100914c3ad8
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Sep 5 09:13:39 2014 +0200
+
+    SQOOP-1492: Move Avro and GenericRecord related common code to AvroUtil
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit 86d7b02d0d36779a1def336bfc9115dbe518329c
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Sep 5 08:44:56 2014 +0200
+
+    SQOOP-1494: Fix generateArvoSchema in DataDrivenImportJob
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit ef43405a74a123b5cb14fc3ae231a0db52929c11
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Sep 5 08:13:14 2014 +0200
+
+    SQOOP-1491: Remove SqoopAvroRecord
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit 380734f13d0e2e253301b8091b265a6b4c873e3b
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Sep 4 11:26:13 2014 +0200
+
+    SQOOP-1395: Potential naming conflict in Avro schema
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit 6b70d0e6a993f02624b97487a2a850e30a3c6222
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Sep 2 09:36:41 2014 +0200
+
+    SQOOP-1433: Oracle direct connector fails with Oracle 12c JDBC driver
+    
+    (David Robson via Jarek Jarcec Cecho)
+
+commit b400240847e55ad1892014376371bd9ebe602450
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Mon Sep 1 12:08:31 2014 -0700
+
+    SQOOP-1489: Propagate cubrid properties to the test VM
+      (Jarek Jarcec Cecho via Venkat Ranganathan)
+
+commit 52c22ed3a106fee5dc531a9330b420eefb8ee20d
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Sep 1 10:52:15 2014 +0200
+
+    SQOOP-1392: Create the temporary directory inside task working dir rather then in tmp
+    
+    (Richard via Jarek Jarcec Cecho)
+
+commit b936dce2361e174758549cf6a55b43168120181b
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Sep 1 10:11:49 2014 +0200
+
+    SQOOP-1309: Expand the Sqoop to support CUBRID database.
+
+commit adeea1b44e4b131307572a15ebaeeada1facd8d0
+Author: Venkat Ranganathan <venkat@hortonworks.com>
+Date:   Tue Aug 26 17:06:49 2014 -0700
+
+    SQOOP-1474: Fix usage of StringUtils.repeat method
+
+commit b98f05108d33d8d092d4ccbafb3f23d7ab610e2e
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Aug 25 07:57:47 2014 +0200
+
+    SQOOP-1330: Ignore blank newlines in managers.d property files
+    
+    (Chiwan Park via Jarek Jarcec Cecho)
+
+commit 4929b25203859fe3678ae4bf6b86b27b04588419
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Aug 25 07:41:04 2014 +0200
+
+    SQOOP-1393: Import data from database to Hive as Parquet files
+    
+    (Richard via Jarek Jarcec Cecho)
+
+commit d98d23ea19a06306a7fe9a05116449638fc7fc37
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Aug 19 08:42:48 2014 -0700
+
+    SQOOP-1390: Import data to HDFS as a set of Parquet files
+    
+    (Qian Xu via Jarek Jarcec Cecho)
+
+commit c88e0fd173ef1a67a884a55e6a233071b58a4bc5
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Aug 13 17:28:32 2014 -0700
+
+    SQOOP-1429: Fix native characters usage for SqlServer object names
+    
+    (Venkat Ranganathan via Jarek Jarcec Cecho)
+
+commit 758f5096939fcff54abc3e56386e9aed1a6bd6c5
+Author: Gwen Shapira <cshapi@gmail.com>
+Date:   Wed Aug 13 16:10:56 2014 -0700
+
+    SQOOP-1421: Automated patch script
+
+commit 283fecb2289fc20484288a746abf95c2f51e7d89
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Fri Aug 8 15:20:52 2014 -0700
+
+    SQOOP-1422: Integration tests for Oracle connector fail as not using direct option
+
+commit bb537eecbbeadfe0a3c80260b900190d7af8a969
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Aug 10 12:48:09 2014 -0700
+
+    SQOOP-1411: The number of tasks is not set properly in PGBulkloadExportManager
+    
+    (Masatake Iwasaki via Jarek Jarcec Cecho)
+
+commit e0eb9de7559a61cca3a05486788d0289b75b83a0
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sat Aug 9 10:41:04 2014 -0700
+
+    SQOOP-1423: hcatalog export with --map-column-java fails
+    
+    (Muhammad Ehsan ul Haque via Jarek Jarcec Cecho)
+
+commit c253af777696f2bedfe5de28b641c990f8834c6a
+Author: Keegan Witt <keeganwitt@gmail.com>
+Date:   Thu Aug 7 19:58:03 2014 -0700
+
+    SQOOP-1405: Add arg to enable SQL Server identity insert on export
+
+commit f56271171ea3eef2e9118cd633036bccf297860c
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Aug 3 12:49:48 2014 -0700
+
+    SQOOP-1412: Text splitter should also consider NCHAR and NVARCHAR fields
+    
+    (Venkat Ranganathan via Jarek Jarcec Cecho)
+
+commit d05d9106931d365e61013a8ea68ec0812041597b
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Jul 30 09:45:18 2014 -0700
+
+    SQOOP-1408: Document SQL Server's --non-resilient arg
+    
+    (Keegan Witt via Jarek Jarcec Cecho)
+
+commit d17e076acc0d9d264042d962c3609230002db23f
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Jul 25 07:34:53 2014 -0700
+
+    SQOOP-1401: Fix checkstyle violations for ClassWriter.java
+    
+    (Richard via Jarek Jarcec Cecho)
+
+commit 339cd873ff2c3fde2cf5042ec225621532e7aa72
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Jul 25 06:48:57 2014 -0700
+
+    SQOOP-1368: the configuration properties are reset in HBaseImportJob
+    
+    (Guodong Wang via Jarek Jarcec Cecho)
+
+commit 286852b3c767ce6fc921f3f2af0a686a6116ab68
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Thu Jul 24 20:12:41 2014 -0700
+
+    SQOOP-1400: Failed to import data using mysql-connector-java-5.1.17.jar
+    
+    (Richard via Jarek Jarcec Cecho)
+
+commit 910fb22e43bf3ff9ea557364e55f200a19cae1fa
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Wed Jul 23 14:01:57 2014 -0700
+
+    Preparing for release 1.4.6 development
+    
+    Conflicts:
+    	build.xml
+
+commit 6da972e8ca2e0d8cc2262916b2a4787f41c1cbf6
+Author: Abraham Elmahrek <abraham@elmahrek.com>
+Date:   Thu Aug 28 18:08:51 2014 -0700
+
+    CLOUDERA-BUILD. Sqoop 1.4.5 rebase
+
+commit 499a8332f49b2f793a8d9083e0b555c2526afd4a
+Author: Jenkins slave <kitchen-build@cloudera.com>
+Date:   Mon Mar 3 11:02:39 2014 -0800
+
+    Preparing for CDH5.2.0 development
+
+commit 3edf79e60e46bbe5164299eab0c8f89a4d3a00ec
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon May 19 18:41:54 2014 -0700
+
+    CLOUDERA-BUILD. Changing default value of sqoop.jobbase.serialize.sqoopoptions to true
+    
+    CDH-19278: Change default value of sqoop.jobbase.serialize.sqoopoptions to true in CDH build
+
+commit 1ac3727ae4466e859c5505fb7c41722d9ac44773
+Author: Andrew Bayer <andrew@cloudera.com>
+Date:   Tue Dec 3 10:27:34 2013 -0800
+
+    CLOUDERA-BUILD. Fix hive-catalog-core artifactId in POM
+
+commit 7950da2aef6d3cae36e1a9c03aa213a7281f4154
+Author: Andrew Bayer <andrew@cloudera.com>
+Date:   Tue Dec 3 09:28:52 2013 -0800
+
+    CLOUDERA-BUILD. Fix hcatalog dependency detection
+
+commit a24d0a01e11a8c85d7ba0d69d940a92e15b78a50
+Author: Jenkins slave <kitchen-build@cloudera.com>
+Date:   Sun Nov 10 09:27:13 2013 -0800
+
+    CLOUDERA-BUILD. Moving hcatalog group ID.
+    
+    Conflicts:
+    	ivy.xml
+
+commit 218e7906b8d26e851c1c956215dc908d3bccfb60
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Fri Oct 18 11:06:48 2013 -0700
+
+    CLODUERA-BUILD. Changing maven repository URL
+
+commit 2b57e7fba35438c4f2b12223dc83211eabb25325
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Mon Sep 23 15:50:23 2013 -0700
+
+    CLOUDERA-BUILD. Setting JDK target to 1.6
+    
+    Conflicts:
+    	build.xml
+
+commit d99fa81d436e33becdd6a67398731443821209e5
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Sun Aug 18 13:04:36 2013 -0700
+
+    CLOUDERA-BUILD. Switching to target JDK 1.7
+    
+    Conflicts:
+    	build.xml
+
+commit 29e93333ec89130e40f73b49321428ce12411ba1
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Aug 13 16:00:56 2013 -0700
+
+    CLOUDERA-BUILD. Not removing cdh.build.properties file during clean
+
+commit 3df5a8c1e8e5f8bdd69efff48e33191582105fa5
+Author: Jarek Jarcec Cecho <jarcec@apache.org>
+Date:   Tue Aug 13 11:51:10 2013 -0700
+
+    CLOUDERA-BUILD. Backports for CDH build
+    
+    Conflicts:
+    	ivy.xml

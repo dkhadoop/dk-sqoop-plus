@@ -1,0 +1,36 @@
+From 34bc01bca73624def3edc63b8c93f098e4b12e97 Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Thu, 11 Sep 2014 08:29:41 +0200
+Subject: [PATCH 039/101] SQOOP-1508: Add warning when using unsupported compression codec
+
+(Qian Xu via Jarek Jarcec Cecho)
+---
+ .../org/apache/sqoop/mapreduce/ImportJobBase.java  |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java b/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java
+index 0ac35de..7b5ed66 100644
+--- a/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java
++++ b/src/java/org/apache/sqoop/mapreduce/ImportJobBase.java
+@@ -140,6 +140,18 @@ protected void configureOutputFormat(Job job, String tableName,
+             .set(AvroJob.OUTPUT_CODEC, DataFileConstants.DEFLATE_CODEC);
+         }
+       }
++
++      if (options.getFileLayout() == SqoopOptions.FileLayout.ParquetFile) {
++        if (codecName != null) {
++          Configuration conf = job.getConfiguration();
++          String shortName = CodecMap.getCodecShortNameByName(codecName, conf);
++          if (!shortName.equalsIgnoreCase("default") &&
++              !shortName.equalsIgnoreCase("snappy")) {
++            // TODO: SQOOP-1391 More compression codec support
++            LOG.warn("Will use snappy as compression codec instead");
++          }
++        }
++      }
+     }
+ 
+     Path outputPath = context.getDestination();
+-- 
+1.7.0.4
+

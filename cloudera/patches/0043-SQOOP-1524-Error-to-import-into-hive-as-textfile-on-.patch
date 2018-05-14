@@ -1,0 +1,28 @@
+From 1b800d9fe63313d076d830fa4771a9c00e8d9d4f Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Wed, 17 Sep 2014 10:04:29 +0200
+Subject: [PATCH 043/101] SQOOP-1524: Error to import into hive as textfile on hive 0.13.0
+
+(Richard via Jarek Jarcec Cecho)
+---
+ ivy.xml |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/ivy.xml b/ivy.xml
+index 9b13462..eb4b1c1 100644
+--- a/ivy.xml
++++ b/ivy.xml
+@@ -193,7 +193,9 @@ under the License.
+     <dependency org="org.kitesdk" name="kite-data-mapreduce" rev="${kite-data.version}"
+       conf="avro->default;redist->default"/>
+     <dependency org="org.kitesdk" name="kite-data-hcatalog" rev="${kite-data.version}"
+-      conf="avro->default;redist->default"/>
++      conf="avro->default;redist->default">
++      <exclude org="com.twitter" module="parquet-hive-bundle"/>
++    </dependency>
+ 
+     <!-- dependencies for static analysis -->
+     <dependency org="checkstyle" name="checkstyle" rev="${checkstyle.version}"
+-- 
+1.7.0.4
+

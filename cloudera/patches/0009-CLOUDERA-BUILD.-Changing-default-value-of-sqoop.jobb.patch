@@ -1,0 +1,26 @@
+From 3edf79e60e46bbe5164299eab0c8f89a4d3a00ec Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Mon, 19 May 2014 18:41:54 -0700
+Subject: [PATCH 009/101] CLOUDERA-BUILD. Changing default value of sqoop.jobbase.serialize.sqoopoptions to true
+
+CDH-19278: Change default value of sqoop.jobbase.serialize.sqoopoptions to true in CDH build
+---
+ src/java/org/apache/sqoop/mapreduce/JobBase.java |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/mapreduce/JobBase.java b/src/java/org/apache/sqoop/mapreduce/JobBase.java
+index 92a78ac..1be32a5 100644
+--- a/src/java/org/apache/sqoop/mapreduce/JobBase.java
++++ b/src/java/org/apache/sqoop/mapreduce/JobBase.java
+@@ -50,7 +50,7 @@
+   public static final Log LOG = LogFactory.getLog(JobBase.class.getName());
+ 
+   public static final String SERIALIZE_SQOOPOPTIONS = "sqoop.jobbase.serialize.sqoopoptions";
+-  public static final boolean SERIALIZE_SQOOPOPTIONS_DEFAULT = false;
++  public static final boolean SERIALIZE_SQOOPOPTIONS_DEFAULT = true;
+ 
+   protected SqoopOptions options;
+   protected Class<? extends Mapper> mapperClass;
+-- 
+1.7.0.4
+

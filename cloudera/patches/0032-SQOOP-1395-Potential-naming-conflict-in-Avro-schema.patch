@@ -1,0 +1,51 @@
+From 380734f13d0e2e253301b8091b265a6b4c873e3b Mon Sep 17 00:00:00 2001
+From: Jarek Jarcec Cecho <jarcec@apache.org>
+Date: Thu, 4 Sep 2014 11:26:13 +0200
+Subject: [PATCH 032/101] SQOOP-1395: Potential naming conflict in Avro schema
+
+(Qian Xu via Jarek Jarcec Cecho)
+---
+ .../org/apache/sqoop/orm/AvroSchemaGenerator.java  |    4 ++--
+ src/java/org/apache/sqoop/orm/TableClassName.java  |    4 +++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java b/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java
+index 806bace..3c913a8 100644
+--- a/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java
++++ b/src/java/org/apache/sqoop/orm/AvroSchemaGenerator.java
+@@ -71,8 +71,8 @@ public Schema generate() throws IOException {
+ 
+     TableClassName tableClassName = new TableClassName(options);
+     String shortClassName = tableClassName.getShortClassForTable(tableName);
+-    String avroTableName = (tableName == null ? "QueryResult" : tableName);
+-    String avroName = (shortClassName == null ? avroTableName : shortClassName);
++    String avroTableName = (tableName == null ? TableClassName.QUERY_RESULT : tableName);
++    String avroName = "sqoop_import_" + (shortClassName == null ? avroTableName : shortClassName);
+     String avroNamespace = tableClassName.getPackageForTable();
+ 
+     String doc = "Sqoop import of " + avroTableName;
+diff --git a/src/java/org/apache/sqoop/orm/TableClassName.java b/src/java/org/apache/sqoop/orm/TableClassName.java
+index 88ab622..13aa301 100644
+--- a/src/java/org/apache/sqoop/orm/TableClassName.java
++++ b/src/java/org/apache/sqoop/orm/TableClassName.java
+@@ -33,6 +33,8 @@
+   public static final Log LOG = LogFactory.getLog(
+       TableClassName.class.getName());
+ 
++  public static final String QUERY_RESULT = "QueryResult";
++
+   private final SqoopOptions options;
+ 
+   public TableClassName(final SqoopOptions opts) {
+@@ -84,7 +86,7 @@ public String getClassForTable(String tableName) {
+ 
+     String queryName = tableName;
+     if (null == queryName) {
+-      queryName = "QueryResult";
++      queryName = QUERY_RESULT;
+     }
+ 
+     String packageName = options.getPackageName();
+-- 
+1.7.0.4
+
